@@ -38,3 +38,33 @@ jobs:
         with:
           name: dragon-browser-${{ matrix.os }}
           path: release/**/*
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: downloaded
+
+      - name: Flatten installer files
+        run: |
+          mkdir -p to-release
+          find downloaded -type f \( -name "*.exe" -o -name "*.dmg" -o -name "*.AppImage" -o -name "*.deb" \) -exec cp {} to-release/ \;
+          ls -la to-release
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: "Dragon Browser - Latest Build"
+          body: "Auto-built release of Dragon Browser. Choose the file for your OS."
+          files: to-release/*
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en" style=""><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Dragon Browser | The Web, Reclaimed</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "background": "#0f131f",
+                        "primary-container": "#c41e3a",
+                        "on-primary-fixed-variant": "#920023",
+                        "surface-container-low": "#171b27",
+                        "surface-container-highest": "#303441",
+                        "on-secondary": "#2a3041",
+                        "surface-variant": "#303441",
+                        "secondary-container": "#404658",
+                        "primary": "#ffb3b4",
+                        "on-error": "#690005",
+                        "secondary-fixed": "#dce2f8",
+                        "on-tertiary-fixed": "#40000b",
+                        "surface-bright": "#353946",
+                        "tertiary-fixed-dim": "#ffb3b5",
+                        "surface-tint": "#ffb3b4",
+                        "on-secondary-fixed": "#151b2b",
+                        "surface": "#0f131f",
+                        "on-primary-container": "#ffdada",
+                        "surface-container-lowest": "#0a0e19",
+                        "outline": "#aa8989",
+                        "surface-dim": "#0f131f",
+                        "on-surface": "#dfe2f3",
+                        "tertiary-fixed": "#ffdada",
+                        "on-secondary-fixed-variant": "#404658",
+                        "outline-variant": "#5b4040",
+                        "inverse-on-surface": "#2c303d",
+                        "on-primary-fixed": "#40000a",
+                        "surface-container-high": "#262a36",
+                        "on-tertiary-container": "#ffdbdb",
+                        "on-surface-variant": "#e3bebd",
+                        "primary-fixed": "#ffdad9",
+                        "secondary": "#c0c6db",
+                        "on-error-container": "#ffdad6",
+                        "error": "#ffb4ab",
+                        "tertiary": "#ffb3b5",
+                        "primary-fixed-dim": "#ffb3b4",
+                        "on-tertiary-fixed-variant": "#920025",
+                        "inverse-surface": "#dfe2f3",
+                        "on-primary": "#680016",
+                        "on-tertiary": "#680018",
+                        "tertiary-container": "#cb0038",
+                        "inverse-primary": "#ba1434",
+                        "surface-container": "#1b1f2c",
+                        "on-secondary-container": "#afb4c9",
+                        "error-container": "#93000a",
+                        "secondary-fixed-dim": "#c0c6db",
+                        "on-background": "#dfe2f3"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "gutter": "16px",
+                        "margin-mobile": "16px",
+                        "unit": "4px",
+                        "max-width": "1440px",
+                        "margin-desktop": "32px"
+                    },
+                    "fontFamily": {
+                        "headline-lg-mobile": ["Space Grotesk", "sans-serif"],
+                        "title-md": ["Space Grotesk", "sans-serif"],
+                        "body-md": ["Inter", "sans-serif"],
+                        "body-lg": ["Inter", "sans-serif"],
+                        "display-lg": ["Space Grotesk", "sans-serif"],
+                        "headline-lg": ["Space Grotesk", "sans-serif"],
+                        "label-sm": ["JetBrains Mono", "monospace"]
+                    },
+                    "fontSize": {
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "title-md": ["20px", { "lineHeight": "28px", "fontWeight": "500" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body { background-color: #141824; }
+        .glass-panel {
+            background: rgba(31, 37, 53, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom-color: rgba(255, 255, 255, 0.05);
+        }
+        .crimson-glow:hover, .crimson-glow-active {
+            box-shadow: 0 0 12px 0 rgba(196, 30, 58, 0.3);
+        }
+        .btn-primary {
+            background-color: #C41E3A;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            box-shadow: 0 0 12px 0 rgba(196, 30, 58, 0.5);
+            transform: translateY(-1px);
+        }
+        .btn-ghost {
+            background-color: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .btn-ghost:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        /* Reveal animations */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .delay-100 { transition-delay: 100ms; }
+        .delay-200 { transition-delay: 200ms; }
+        .delay-300 { transition-delay: 300ms; }
+    </style>
+</head>
+<body class="text-on-surface font-body-md antialiased overflow-x-hidden selection:bg-primary-container selection:text-white">
+<!-- Top Navigation (From JSON) -->
+<nav class="bg-background/80 backdrop-blur-xl fixed top-0 w-full z-50 border-b border-white/10 shadow-sm transition-all duration-300 ease-in-out">
+<div class="flex justify-between items-center h-16 px-gutter max-w-max-width mx-auto">
+<div class="flex items-center gap-2">
+<span class="font-headline-lg text-headline-lg font-bold text-primary tracking-tighter">Dragon</span>
+</div>
+<div class="hidden md:flex items-center gap-8">
+<!-- Assuming "Features" is active for a landing page exploring features -->
+<a class="font-title-md text-title-md px-2 transition-all duration-300 ease-in-out text-on-surface/60 hover:text-on-surface" href="#features">Features</a>
+<a class="text-on-surface/60 hover:text-on-surface transition-colors font-title-md text-title-md px-2 transition-all duration-300 ease-in-out" href="#security">Security</a>
+<a class="text-on-surface/60 hover:text-on-surface transition-colors font-title-md text-title-md px-2 transition-all duration-300 ease-in-out" href="#comparison">Comparison</a>
+</div>
+<div>
+<a class="btn-primary px-6 py-2 rounded font-title-md text-sm font-bold tracking-wide flex items-center gap-2" href="#download">
+<span class="material-symbols-outlined" style='font-variation-settings: "FILL" 1; font-size: 18px;'>download</span>
+                    Download
+                </a>
+</div>
+</div>
+</nav>
+<!-- Hero Section -->
+<header class="relative min-h-screen flex items-center justify-center pt-24 pb-12 px-gutter overflow-hidden" id="hero">
+<!-- Background Animation (WebGL crimson glow shader) -->
+<div class="absolute inset-0 w-full h-full" style="display:block;">
+<canvas id="shader-canvas-hero" style="display:block;width:100%;height:100%"></canvas>
+</div>
+<div class="absolute inset-0 w-full h-full bg-gradient-to-b from-transparent via-transparent to-background pointer-events-none"></div>
+<script>
+(function() {
+  const canvas = document.getElementById('shader-canvas-hero');
+  if (!canvas) return;
+
+  function syncSize() {
+    const w = canvas.clientWidth  || 1280;
+    const h = canvas.clientHeight || 720;
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width  = w;
+      canvas.height = h;
+    }
+  }
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(syncSize).observe(canvas);
+  }
+  syncSize();
+
+  const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+  if (!gl) return;
+  const vs = `attribute vec2 a_position;
+varying vec2 v_texCoord;
+void main() {
+  v_texCoord = a_position * 0.5 + 0.5;
+  gl_Position = vec4(a_position, 0.0, 1.0);
+}`;
+  const fs = `precision highp float;
+varying vec2 v_texCoord;
+uniform float u_time;
+uniform vec2 u_resolution;
+
+void main() {
+    vec2 uv = v_texCoord;
+    vec2 center = vec2(0.5, 0.5);
+    float dist = distance(uv, center);
+
+    // Core color: Deep Crimson Red (#c41e3a)
+    vec3 red = vec3(0.769, 0.118, 0.227);
+    vec3 dark = vec3(0.078, 0.094, 0.141); // #141824
+
+    // Pulsing radial glow
+    float pulse = 0.5 + 0.5 * sin(u_time * 1.5);
+    float glow = smoothstep(0.5, 0.0, dist);
+    glow = pow(glow, 2.5) * (1.0 + 0.2 * pulse);
+
+    vec3 color = mix(dark, red, glow * 0.4);
+
+    // Subtle breathing shimmer
+    float breath = sin(uv.x * 10.0 + u_time) * cos(uv.y * 10.0 + u_time) * 0.02;
+    color += red * breath * glow;
+
+    gl_FragColor = vec4(color, 1.0);
+}`;
+  function cs(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    return s;
+  }
+  const prog = gl.createProgram();
+  gl.attachShader(prog, cs(gl.VERTEX_SHADER, vs));
+  gl.attachShader(prog, cs(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(prog);
+  gl.useProgram(prog);
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+  const pos = gl.getAttribLocation(prog, 'a_position');
+  gl.enableVertexAttribArray(pos);
+  gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
+  const uTime = gl.getUniformLocation(prog, 'u_time');
+  const uRes = gl.getUniformLocation(prog, 'u_resolution');
+
+  function render(t) {
+    if (typeof ResizeObserver === 'undefined') syncSize();
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    if (uTime) gl.uniform1f(uTime, t * 0.001);
+    if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    requestAnimationFrame(render);
+  }
+  render(0);
+})();
+</script>
+
+<div class="relative z-10 max-w-4xl mx-auto text-center flex flex-col items-center reveal active">
+<div class="mb-8 w-40 h-40 md:w-56 md:h-56 relative drop-shadow-[0_0_30px_rgba(196,30,58,0.5)] animate-pulse">
+<img alt="Dragon Logo" class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgAx4T1K9wH1PekYiVamXJU5pTxTfB7TZ1UgsQRB8NeQWzRa4WUF_ZVnVfAcNHU_7BkJ5fS3R2GOqIkBWJRR2PjiUkQzVVuIKxqr1SDgDUg6Zi17gnbNwvDAJ0UZI25ZThVHjSLlyziihYfANB1MSrfsFct72Jn3I5n18rotQ6cjw_bA1zX_NFPqZNUicfa_WOg8pWq6BDf7rE2u6GZvr6VwbMVetMbWUTZ9gFL22ApQw5b2k1_Xe9fbnIVz4EOFKOrNZykYJB7aEg-g"/>
+</div>
+<h1 class="font-display-lg text-4xl md:text-display-lg text-white mb-6">
+                The Web, Reclaimed.<br/>
+<span class="text-primary-container">Fast. Private. Powerful.</span>
+</h1>
+<p class="font-body-lg text-on-surface-variant max-w-2xl mx-auto mb-10 text-lg">
+                Experience a browser engineered for elite performance and silent protection. Leave the bloated, tracking-heavy alternatives behind.
+            </p>
+<div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto justify-center">
+<a class="btn-primary px-8 py-4 rounded-md font-title-md text-lg font-bold flex items-center justify-center gap-2" href="#download">
+<span class="material-symbols-outlined" style='font-variation-settings: "FILL" 1;'>laptop_windows</span>
+                    Download for Desktop
+                </a>
+<a class="btn-ghost px-8 py-4 rounded-md font-title-md text-lg font-bold flex items-center justify-center gap-2" href="#features">
+<span class="material-symbols-outlined">explore</span>
+                    Explore Features
+                </a>
+</div>
+<div class="mt-12 flex items-center gap-4 text-on-surface-variant font-label-sm uppercase opacity-70">
+<span class="material-symbols-outlined" style="font-size: 16px;">verified_user</span> Open Source
+                <span class="w-1 h-1 bg-on-surface-variant rounded-full"></span>
+<span class="material-symbols-outlined" style="font-size: 16px;">speed</span> Chromium Engine
+            </div>
+</div>
+</header>
+<!-- Feature Grid -->
+<section class="py-24 px-gutter max-w-max-width mx-auto relative z-10" id="features">
+<div class="text-center mb-16 reveal active">
+<h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-white mb-4">Tactical Advantages</h2>
+<p class="font-body-lg text-on-surface-variant max-w-2xl mx-auto">Engineered to outperform standard browsers on every metric.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<!-- Card 1 -->
+<div class="glass-panel p-6 rounded-xl hover:-translate-y-2 transition-transform duration-300 crimson-glow group reveal active">
+<div class="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center mb-6 group-hover:bg-primary-container/20 transition-colors">
+<span class="material-symbols-outlined text-primary-container text-3xl" style='font-variation-settings: "FILL" 1;'>block</span>
+</div>
+<h3 class="font-title-md text-xl text-white mb-3">Ads Blocked, By Default</h3>
+<p class="font-body-md text-on-surface-variant">Built-in network-level blocking stops the vast majority of trackers and ads before they even load — no extensions required.</p>
+</div>
+<!-- Card 2 -->
+<div class="glass-panel p-6 rounded-xl hover:-translate-y-2 transition-transform duration-300 crimson-glow group reveal delay-100 active">
+<div class="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center mb-6 group-hover:bg-primary-container/20 transition-colors">
+<span class="material-symbols-outlined text-primary-container text-3xl" style='font-variation-settings: "FILL" 1;'>memory</span>
+</div>
+<h3 class="font-title-md text-xl text-white mb-3">Ultra Low RAM Usage</h3>
+<p class="font-body-md text-on-surface-variant">Aggressive tab sleeping and memory management means Dragon uses a fraction of the RAM Chrome demands.</p>
+</div>
+<!-- Card 3 -->
+<div class="glass-panel p-6 rounded-xl hover:-translate-y-2 transition-transform duration-300 crimson-glow group reveal delay-200 active">
+<div class="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center mb-6 group-hover:bg-primary-container/20 transition-colors">
+<span class="material-symbols-outlined text-primary-container text-3xl" style='font-variation-settings: "FILL" 1;'>shield</span>
+</div>
+<h3 class="font-title-md text-xl text-white mb-3">Serious, Layered Security</h3>
+<p class="font-body-md text-on-surface-variant">Strict process sandboxing, real-time malicious site blocking, and anti-fingerprinting — no single layer is perfect, but together they make Dragon a hard target.</p>
+</div>
+<!-- Card 4 -->
+<div class="glass-panel p-6 rounded-xl hover:-translate-y-2 transition-transform duration-300 crimson-glow group reveal delay-300 active">
+<div class="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center mb-6 group-hover:bg-primary-container/20 transition-colors">
+<span class="material-symbols-outlined text-primary-container text-3xl" style='font-variation-settings: "FILL" 1;'>tune</span>
+</div>
+<h3 class="font-title-md text-xl text-white mb-3">Built for You</h3>
+<p class="font-body-md text-on-surface-variant">Deep customization options. Configure keyboard shortcuts, UI density, and privacy rules to fit your workflow.</p>
+</div>
+</div>
+</section>
+<!-- UI Preview Section -->
+<section class="py-24 px-gutter relative z-10 bg-background/50" id="security">
+<div class="max-w-6xl mx-auto reveal active">
+<div class="text-center mb-16">
+<h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-white mb-4">Command Center Interface</h2>
+<p class="font-body-lg text-on-surface-variant max-w-2xl mx-auto">Designed for professionals who need high density and minimal distraction.</p>
+</div>
+<div class="glass-panel p-2 rounded-xl border-t-white/20 shadow-2xl relative overflow-hidden group">
+<!-- Browser Mockup -->
+<div class="bg-surface-container-highest rounded-lg overflow-hidden border border-white/5">
+<!-- Browser Top Bar -->
+<div class="bg-surface-container-lowest h-12 flex items-center px-4 border-b border-white/5 gap-4">
+<div class="flex gap-2">
+<div class="w-3 h-3 rounded-full bg-surface-variant"></div>
+<div class="w-3 h-3 rounded-full bg-surface-variant"></div>
+<div class="w-3 h-3 rounded-full bg-surface-variant"></div>
+</div>
+<div class="flex-1 bg-surface-container-high rounded h-7 flex items-center px-3 gap-2 border border-white/5 mx-4 max-w-2xl">
+<span class="material-symbols-outlined text-on-surface-variant" style="font-size: 14px;">lock</span>
+<span class="font-label-sm text-on-surface text-xs opacity-70">https://dragon.browser/secure</span>
+</div>
+<div class="flex gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined" style="font-size: 18px;">extension</span>
+<span class="material-symbols-outlined" style="font-size: 18px;">person</span>
+</div>
+</div>
+<!-- Browser Content Area -->
+<div class="relative h-[400px] md:h-[600px] w-full bg-background flex">
+<!-- Sidebar Mockup -->
+<div class="w-16 md:w-64 border-r border-white/5 h-full flex flex-col pt-4 hidden sm:flex bg-surface-container-lowest/50">
+<div class="px-4 mb-6 flex items-center gap-3 text-primary-container">
+<span class="material-symbols-outlined" style="font-size: 24px;">local_fire_department</span>
+<span class="font-title-md font-bold hidden md:block">Dragon</span>
+</div>
+<div class="flex flex-col gap-1 px-2">
+<div class="h-10 rounded bg-white/5 flex items-center px-2 gap-3 text-white border-l-2 border-primary-container">
+<span class="material-symbols-outlined" style="font-size: 20px;">dashboard</span>
+<span class="font-body-md hidden md:block">Dashboard</span>
+</div>
+<div class="h-10 rounded hover:bg-white/5 flex items-center px-2 gap-3 text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">history</span>
+<span class="font-body-md hidden md:block">History</span>
+</div>
+</div>
+</div>
+<!-- Main Content Mockup Placeholder -->
+<div class="flex-1 p-8" data-alt="A highly detailed, ultra-high-resolution mockup of a modern, dark-themed dashboard interface displayed on a monitor. The UI features deep navy backgrounds, semi-transparent glassmorphism panels, and sharp geometric data visualizations. Tactical crimson red accents highlight active elements and charts. The layout is dense, grid-based, and professional, resembling an elite command center or trading platform with sharp typography and micro-borders." style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA9bwlszZ0Ux92blUbz9xuPwF17hpYXKuSCQNxTy15sGMGHj2elgwaLyY5R3Ml7_GSnUrrjWyGfEZbey5qQ0JMWGW2WE_3Yo99VpuJpAJ58s9SgbdmUD4f6BD_OJtYBVKrUcNBS18TsipNvQnBLkpmqRyCH_9wVMPEFzWT4VI0S8IEAXv4mYb1trgUYxzuRQXgf5kpufjKpy3pAd-pjA7iaqU473qWLPtVxZn2NTtxZRfwOYowKBhht");'>
+<div class="w-full h-full glass-panel rounded-lg flex items-center justify-center">
+<div class="text-center opacity-50">
+<span class="material-symbols-outlined text-6xl text-primary-container mb-4">speed</span>
+<p class="font-title-md text-white">Rendering Engine Active</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Comparison Table -->
+<section class="py-24 px-gutter max-w-4xl mx-auto relative z-10 reveal active" id="comparison">
+<div class="text-center mb-12">
+<h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-white mb-4">The Verdict</h2>
+<p class="font-body-lg text-on-surface-variant">Numbers don't lie. See how Dragon stacks up against the establishment.</p>
+</div>
+<div class="glass-panel rounded-xl overflow-hidden">
+<div class="grid grid-cols-4 bg-surface-container-lowest/80 border-b border-white/10 p-4 font-label-sm uppercase tracking-wider text-on-surface-variant text-xs">
+<div class="col-span-1">Metric</div>
+<div class="col-span-1 text-center font-bold text-primary-container">Dragon</div>
+<div class="col-span-1 text-center">Chrome</div>
+<div class="col-span-1 text-center">Brave</div>
+</div>
+<div class="grid grid-cols-4 p-4 border-b border-white/5 hover:bg-white/5 transition-colors items-center">
+<div class="col-span-1 font-title-md text-sm text-white flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant" style="font-size: 16px;">memory</span> RAM (10 Tabs)
+                </div>
+<div class="col-span-1 text-center font-bold text-white">~450MB</div>
+<div class="col-span-1 text-center text-on-surface-variant">~850MB+</div>
+<div class="col-span-1 text-center text-on-surface-variant">~600MB+</div>
+</div>
+<div class="grid grid-cols-4 p-4 border-b border-white/5 hover:bg-white/5 transition-colors items-center">
+<div class="col-span-1 font-title-md text-sm text-white flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant" style="font-size: 16px;">block</span> Ad-Blocking
+                </div>
+<div class="col-span-1 text-center font-bold text-white">~95% Native</div>
+<div class="col-span-1 text-center text-on-surface-variant">0% (Ext. Only)</div>
+<div class="col-span-1 text-center text-on-surface-variant">~85% Native</div>
+</div>
+<div class="grid grid-cols-4 p-4 hover:bg-white/5 transition-colors items-center">
+<div class="col-span-1 font-title-md text-sm text-white flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant" style="font-size: 16px;">speed</span> Speed Score
+                </div>
+<div class="col-span-1 text-center font-bold text-white flex justify-center">
+<span class="bg-primary-container/20 text-primary-container px-2 py-1 rounded text-xs">~30% Faster*</span>
+</div>
+<div class="col-span-1 text-center text-on-surface-variant">Baseline</div>
+<div class="col-span-1 text-center text-on-surface-variant">~15% Faster</div>
+</div>
+</div>
+<p class="text-xs text-on-surface-variant/50 text-center py-4 px-4 font-body-md">*Figures are internal engineering targets based on typical browsing sessions, not independently audited benchmarks. Real-world results vary by device, tabs open, and network.</p>
+</div>
+</section>
+<!-- Download Section -->
+<section class="py-32 px-gutter relative z-10 text-center reveal active" id="download">
+<div class="max-w-3xl mx-auto glass-panel p-12 rounded-2xl relative overflow-hidden">
+<!-- Subtle background glow for CTA -->
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-primary-container/10 blur-[100px] rounded-full pointer-events-none"></div>
+<h2 class="font-display-lg text-3xl md:text-display-lg text-white mb-6 relative z-10">Take Back Control</h2>
+<p class="font-body-lg text-on-surface-variant mb-10 relative z-10">Join the elite users who have reclaimed their privacy and speed. Installation takes seconds.</p>
+<div class="flex flex-col sm:flex-row justify-center gap-4 relative z-10">
+<a href="https://github.com/ouail-messai/dragon-browser/releases/latest/download/Dragon-Browser-Windows-Setup.exe" class="btn-primary px-6 py-4 rounded-md font-title-md font-bold flex items-center justify-center gap-2">
+<span class="material-symbols-outlined" style='font-variation-settings: "FILL" 1;'>laptop_windows</span>
+                    Windows
+                </a>
+<a href="https://github.com/ouail-messai/dragon-browser/releases/latest/download/Dragon-Browser-macOS.dmg" class="btn-primary px-6 py-4 rounded-md font-title-md font-bold flex items-center justify-center gap-2">
+<span class="material-symbols-outlined" style='font-variation-settings: "FILL" 1;'>laptop_mac</span>
+                    macOS
+                </a>
+<a href="https://github.com/ouail-messai/dragon-browser/releases/latest/download/Dragon-Browser-Linux.AppImage" class="btn-ghost px-6 py-4 rounded-md font-title-md font-bold flex items-center justify-center gap-2">
+<span class="material-symbols-outlined" style='font-variation-settings: "FILL" 1;'>terminal</span>
+                    Linux
+                </a>
+</div>
+<p class="mt-6 font-label-sm text-on-surface-variant/60 text-xs uppercase tracking-widest relative z-10">Version 0.1.0 • Early Build</p>
+</div>
+</section>
+<!-- Footer (From JSON) -->
+<footer class="bg-surface-container-lowest py-12 border-t border-white/5 relative z-10">
+<div class="flex flex-col md:flex-row justify-between items-center px-gutter max-w-max-width mx-auto gap-8">
+<div class="font-title-md text-title-md font-bold text-on-surface">
+                Dragon Browser
+            </div>
+<div class="flex flex-wrap justify-center gap-6 font-body-md text-body-md">
+</div>
+<div class="text-on-surface-variant font-body-md text-sm opacity-60 text-center md:text-right">
+                © 2026 Dragon Browser. All rights reserved. Built for the elite.
+            </div>
+</div>
+</footer>
+<!-- Simple Scroll Reveal Script -->
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const reveals = document.querySelectorAll('.reveal');
+            
+            const revealOnScroll = () => {
+                const windowHeight = window.innerHeight;
+                const elementVisible = 100;
+                
+                reveals.forEach(reveal => {
+                    const elementTop = reveal.getBoundingClientRect().top;
+                    if (elementTop < windowHeight - elementVisible) {
+                        reveal.classList.add('active');
+                    }
+                });
+            };
+            
+            // Trigger once on load
+            revealOnScroll();
+            // Trigger on scroll
+            window.addEventListener('scroll', revealOnScroll);
+        });
+    </script>
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const sections = document.querySelectorAll('header[id], section[id]');
+            const navLinks = document.querySelectorAll('nav .hidden.md\\:flex a');
+            
+            // Smooth Scroll
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetId = link.getAttribute('href');
+                    const targetSection = document.querySelector(targetId);
+                    if (targetSection) {
+                        window.scrollTo({
+                            top: targetSection.offsetTop - 64,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+
+            // ScrollSpy Logic
+            const observerOptions = {
+                root: null,
+                rootMargin: '-20% 0px -70% 0px',
+                threshold: 0
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.getAttribute('id');
+                        navLinks.forEach(link => {
+                            link.classList.remove('text-primary', 'font-bold', 'border-b-2', 'border-primary', 'pb-1');
+                            link.classList.add('text-on-surface/60');
+                            if (link.getAttribute('href') === `#${id}`) {
+                                link.classList.add('text-primary', 'font-bold', 'border-b-2', 'border-primary', 'pb-1');
+                                link.classList.remove('text-on-surface/60');
+                            }
+                        });
+                    }
+                });
+            }, observerOptions);
+
+            sections.forEach(section => observer.observe(section));
+        });
+    </script></body></html>
