@@ -4,6 +4,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Dragon Browser | The Web, Reclaimed</title>
+<link rel="icon" type="image/png" href="dragon-favicon.png"/>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <script>
         tailwind.config = {
@@ -99,6 +100,14 @@
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <style>
         body { background-color: #141824; }
+        /* إخفاء نص الأيقونات الخام (download, laptop_windows...) لحد ما خط Material Symbols يتحمل كامل، تفاديا لفساد الكتابة عند التحميل/الريفريش */
+        .material-symbols-outlined {
+            opacity: 0;
+            transition: opacity 0.15s ease;
+        }
+        .fonts-loaded .material-symbols-outlined {
+            opacity: 1;
+        }
         .glass-panel {
             background: rgba(31, 37, 53, 0.8);
             backdrop-filter: blur(20px);
@@ -433,11 +442,11 @@ void main() {
 <h2 class="font-display-lg text-3xl md:text-display-lg text-white mb-6 relative z-10">Take Back Control</h2>
 <p class="font-body-lg text-on-surface-variant mb-10 relative z-10">Join the elite users who have reclaimed their privacy and speed. Installation takes seconds.</p>
 <div class="flex flex-col sm:flex-row justify-center gap-4 relative z-10">
-<a href="https://github.com/ouail-messai/dragon-browser/releases/latest/download/Dragon-Browser-Windows-Setup.exe" class="btn-primary px-6 py-4 rounded-md font-title-md font-bold flex items-center justify-center gap-2">
+<a href="https://github.com/ouail-messai/dragon-browser/releases/latest/download/Dragon-Browser-Windows-Setup.exe" class="btn-ghost px-6 py-4 rounded-md font-title-md font-bold flex items-center justify-center gap-2">
 <span class="material-symbols-outlined" style='font-variation-settings: "FILL" 1;'>laptop_windows</span>
                     Windows
                 </a>
-<a href="https://github.com/ouail-messai/dragon-browser/releases/latest/download/Dragon-Browser-macOS.dmg" class="btn-primary px-6 py-4 rounded-md font-title-md font-bold flex items-center justify-center gap-2">
+<a href="https://github.com/ouail-messai/dragon-browser/releases/latest/download/Dragon-Browser-macOS.dmg" class="btn-ghost px-6 py-4 rounded-md font-title-md font-bold flex items-center justify-center gap-2">
 <span class="material-symbols-outlined" style='font-variation-settings: "FILL" 1;'>laptop_mac</span>
                     macOS
                 </a>
@@ -464,6 +473,17 @@ void main() {
 </footer>
 <!-- Simple Scroll Reveal Script -->
 <script>
+        // كي يخلص خط الأيقونات (Material Symbols) التحميل، نوري الأيقونات (نمنع فساد الكتابة عند التحميل الأول أو الريفريش)
+        if (document.fonts && document.fonts.ready) {
+            document.fonts.ready.then(() => {
+                document.documentElement.classList.add('fonts-loaded');
+            });
+            // حماية إضافية: إذا تأخر الخط لأي سبب، نوري الأيقونات بعد 1.5 ثانية بكل الأحوال
+            setTimeout(() => document.documentElement.classList.add('fonts-loaded'), 1500);
+        } else {
+            document.documentElement.classList.add('fonts-loaded');
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const reveals = document.querySelectorAll('.reveal');
             

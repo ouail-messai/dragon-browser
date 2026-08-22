@@ -12,7 +12,7 @@
   "scripts": {
     "start": "electron .",
     "dist:win": "electron-builder --win --x64 --publish never",
-    "dist:mac": "electron-builder --mac --x64 --arm64 --publish never",
+    "dist:mac": "electron-builder --mac --universal --publish never",
     "dist:linux": "electron-builder --linux --x64 --publish never",
     "dist:all": "electron-builder -mwl --publish never"
   },
