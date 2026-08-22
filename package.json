@@ -4,7 +4,10 @@
   "version": "0.1.0",
   "description": "Dragon Browser - Fast, private, built-in ad & tracker blocking browser",
   "main": "src/main/main.js",
-  "author": "Dragon Browser Team",
+  "author": {
+    "name": "Dragon Browser Team",
+    "email": "dragon-browser@project.local"
+  },
   "license": "MIT",
   "scripts": {
     "start": "electron .",
@@ -45,7 +48,8 @@
     "linux": {
       "target": ["AppImage", "deb"],
       "icon": "build/icon.png",
-      "category": "Network"
+      "category": "Network",
+      "maintainer": "dragon-browser@project.local"
     }
   }
 }
