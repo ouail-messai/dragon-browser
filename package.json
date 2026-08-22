@@ -1,0 +1,50 @@
+{
+  "name": "dragon-browser",
+  "productName": "Dragon Browser",
+  "version": "0.1.0",
+  "description": "Dragon Browser - Fast, private, built-in ad & tracker blocking browser",
+  "main": "src/main/main.js",
+  "author": "Dragon Browser Team",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win --x64",
+    "dist:mac": "electron-builder --mac --x64 --arm64",
+    "dist:linux": "electron-builder --linux --x64",
+    "dist:all": "electron-builder -mwl"
+  },
+  "devDependencies": {
+    "electron": "^31.3.0",
+    "electron-builder": "^24.13.3"
+  },
+  "dependencies": {
+    "@cliqz/adblocker-electron": "^1.30.0",
+    "electron-store": "^8.2.0"
+  },
+  "build": {
+    "appId": "com.dragonbrowser.app",
+    "productName": "Dragon Browser",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "src/**/*",
+      "build/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": ["nsis"],
+      "icon": "build/icon.ico"
+    },
+    "mac": {
+      "target": ["dmg"],
+      "icon": "build/icon.icns",
+      "category": "public.app-category.productivity"
+    },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "icon": "build/icon.png",
+      "category": "Network"
+    }
+  }
+}
