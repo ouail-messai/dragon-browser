@@ -16,5 +16,7 @@ contextBridge.exposeInMainWorld('dragon', {
   onTabCreated: (cb) => ipcRenderer.on('tab-created', (e, data) => cb(data)),
   onTabClosed: (cb) => ipcRenderer.on('tab-closed', (e, data) => cb(data)),
   onTitleUpdated: (cb) => ipcRenderer.on('tab-title-updated', (e, data) => cb(data)),
-  onUrlUpdated: (cb) => ipcRenderer.on('tab-url-updated', (e, data) => cb(data))
+  onUrlUpdated: (cb) => ipcRenderer.on('tab-url-updated', (e, data) => cb(data)),
+  onLoadingStart: (cb) => ipcRenderer.on('tab-loading-start', (e, data) => cb(data)),
+  onLoadingStop: (cb) => ipcRenderer.on('tab-loading-stop', (e, data) => cb(data))
 });

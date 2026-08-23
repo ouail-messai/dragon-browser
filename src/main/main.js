@@ -30,6 +30,9 @@ function setupSilentAutoUpdate() {
 // (كيما YouTube) تطيح (crash صامت، شاشة سوداء بلا خطأ). شلناه نهائيا لأنه يكسر الوظيفة الأساسية للمتصفح.
 // التحسين الحقيقي والآمن هو Tab Suspension (تحت) اللي يحرر الرام من تبويبات ما تستخدمهاش، بلا ما يأثر على أي صفحة مفتوحة فعليا.
 app.commandLine.appendSwitch('disable-background-timer-throttling', 'false'); // نخلي throttling شغال (يوفر CPU للتبويبات الخلفية)
+// نعطل Client Hints (Sec-CH-UA...) لأنها تفضح Electron/Chromium الحقيقي حتى لو بدلنا الـ User-Agent المكتوب،
+// وهذا التضارب يخلي مواقع كثيرة (منها YouTube) تكتشف "متصفح غريب" وتعطي نسخة معطلة أو ترفض كليا
+app.commandLine.appendSwitch('disable-features', 'UserAgentClientHint');
 
 let mainWindow;
 let views = new Map(); // tabId -> BrowserView (نشيطة فقط)
@@ -38,11 +41,13 @@ let lastActiveTime = new Map(); // tabId -> timestamp
 let activeTabId = null;
 let tabCounter = 0;
 
-const TOOLBAR_HEIGHT = 84; // مساحة شريط العنوان + التبويبات فوق كل صفحة
+const TOOLBAR_HEIGHT = 88; // 48px شريط الأزرار/التبويبات + 40px شريط العنوان (التصميم الجديد)
 const SUSPEND_AFTER_MS = 5 * 60 * 1000; // نوقف أي تبويب غير نشيط بعد 5 دقايق باش نحرر الرام
 const SUSPEND_CHECK_INTERVAL = 60 * 1000; // نفحص كل دقيقة
 
-const NEW_TAB_URL = 'file://' + path.join(__dirname, '../renderer/newtab.html');
+const os = require('os');
+const { pathToFileURL } = require('url');
+const NEW_TAB_URL = pathToFileURL(path.join(__dirname, '../renderer/newtab.html')).href + '?user=' + encodeURIComponent(os.userInfo().username || 'there');
 // User-Agent واقعي (كروم حقيقي) — Electron افتراضيا يعرّف روحو كـ"Electron" وهذا يخلي مواقع كثيرة (منها YouTube) ترفضو أو تعطي نسخة معطلة
 const REAL_CHROME_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
 
@@ -64,7 +69,15 @@ function createMainWindow() {
 
   mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
 
-  mainWindow.on('resize', () => resizeActiveView());
+  // مشكلة كانت هنا: كي تكبّر/تصغّر النافذة (maximize/unmaximize)، حدث 'resize' وحدو ما كافيش —
+  // البعد الحقيقي للنافذة (getContentBounds) ما يكونش جاهز فوري 100%، فكنا نحسبو المقاس القديم ونعطيه للـ BrowserView.
+  // نزيدو نستمعو لكل الأحداث المعنية + نأخرو الحساب بـ setImmediate باش ناخذو القياس الصحيح الطازج.
+  const scheduleResize = () => setImmediate(() => resizeActiveView());
+  mainWindow.on('resize', scheduleResize);
+  mainWindow.on('maximize', scheduleResize);
+  mainWindow.on('unmaximize', scheduleResize);
+  mainWindow.on('enter-full-screen', scheduleResize);
+  mainWindow.on('leave-full-screen', scheduleResize);
 
   // أول تبويب افتراضي
   mainWindow.webContents.on('did-finish-load', () => {
@@ -81,6 +94,21 @@ async function setupAdBlocker() {
     path: path.join(app.getPath('userData'), 'adblocker-engine.bin'),
     read: require('fs').promises.readFile,
     write: require('fs').promises.writeFile
+  });
+
+  // استثناءات صريحة لدومينات YouTube/Google الأساسية — بعض قوايم الحجب الجاهزة تحجب بالغلط
+  // موارد أساسية (كيما googlevideo.com) وتكسر الموقع كامل. هذا حل رسمي عبر آلية exceptions تاع المكتبة،
+  // ماشي عبر onBeforeRequest يدوي (باش ما نرجعوش لنفس bug تضارب الـ handlers اللي صلحناه قبل).
+  blocker.updateFromDiff({
+    added: [
+      '@@||googlevideo.com^$important',
+      '@@||ytimg.com^$important',
+      '@@||ggpht.com^$important',
+      '@@||youtubei.googleapis.com^$important',
+      '@@||play.google.com^$important',
+      '@@||youtube.com^$important',
+      '@@||www.youtube.com^$important'
+    ]
   });
 
   // هذا هو الـ handler الوحيد المسموح به لـ onBeforeRequest في الـ session —
@@ -124,6 +152,25 @@ function attachCrashRecovery(view) {
   });
 }
 
+// أحداث مشتركة لكل تبويب: عنوان، رابط، وشريط تحميل الصفحة (progress bar)
+function attachTabEvents(id, view) {
+  view.webContents.on('page-title-updated', (e, title) => {
+    mainWindow.webContents.send('tab-title-updated', { id, title });
+  });
+  view.webContents.on('did-navigate', (e, navUrl) => {
+    mainWindow.webContents.send('tab-url-updated', { id, url: navUrl });
+  });
+  view.webContents.on('did-navigate-in-page', (e, navUrl) => {
+    mainWindow.webContents.send('tab-url-updated', { id, url: navUrl });
+  });
+  view.webContents.on('did-start-loading', () => {
+    mainWindow.webContents.send('tab-loading-start', { id });
+  });
+  view.webContents.on('did-stop-loading', () => {
+    mainWindow.webContents.send('tab-loading-stop', { id });
+  });
+}
+
 // ---------- إدارة التبويبات (مع تحسينات ذاكرة) ----------
 function createTab(url = NEW_TAB_URL) {
   const id = ++tabCounter;
@@ -146,13 +193,7 @@ function createTab(url = NEW_TAB_URL) {
   blockAdPopups(view);
   attachCrashRecovery(view);
 
-  view.webContents.on('page-title-updated', (e, title) => {
-    mainWindow.webContents.send('tab-title-updated', { id, title });
-  });
-
-  view.webContents.on('did-navigate', (e, navUrl) => {
-    mainWindow.webContents.send('tab-url-updated', { id, url: navUrl });
-  });
+  attachTabEvents(id, view);
 
   switchTab(id);
   mainWindow.webContents.send('tab-created', { id, url });
@@ -223,12 +264,7 @@ function resumeTab(id, url) {
   blockAdPopups(view);
   attachCrashRecovery(view);
 
-  view.webContents.on('page-title-updated', (e, title) => {
-    mainWindow.webContents.send('tab-title-updated', { id, title });
-  });
-  view.webContents.on('did-navigate', (e, navUrl) => {
-    mainWindow.webContents.send('tab-url-updated', { id, url: navUrl });
-  });
+  attachTabEvents(id, view);
 
   activeTabId = id;
   lastActiveTime.set(id, Date.now());
@@ -259,9 +295,10 @@ function resizeActiveView() {
     x: 0,
     y: TOOLBAR_HEIGHT,
     width: bounds.width,
-    height: bounds.height - TOOLBAR_HEIGHT
+    height: Math.max(0, bounds.height - TOOLBAR_HEIGHT)
   });
-  view.setAutoResize({ width: true, height: true });
+  // ملاحظة: ما نستعملوش setAutoResize هنا عمدا — كان يتضارب مع الحساب اليدوي فوق (مرتين resize مختلفين لنفس الحدث)
+  // وهذا بالضبط كان يسبب "الفساد" اللي كنت تشوفو عند تكبير/تصغير النافذة. الحساب اليدوي وحدو كافي وأدق.
 }
 
 // ---------- IPC: التواصل بين الواجهة (شريط العنوان/التبويبات) ونواة المتصفح ----------

@@ -1,32 +1,40 @@
 let activeId = null;
-const tabsContainer = document.getElementById('tabs-container');
-const addressBar = document.getElementById('address-bar');
+let tabsState = [];
 
-function renderTabs(tabs) {
-  tabsContainer.innerHTML = '';
-  tabs.forEach(tab => {
+const tabsStrip = document.getElementById('tabs-strip');
+const addressBar = document.getElementById('address-bar');
+const progressBar = document.getElementById('progress-bar');
+const backBtn = document.getElementById('back');
+const forwardBtn = document.getElementById('forward');
+
+function displayUrl(url) {
+  return (!url || url.startsWith('file://')) ? '' : url;
+}
+
+function renderTabs() {
+  tabsStrip.innerHTML = '';
+  tabsState.forEach(tab => {
     const el = document.createElement('div');
     el.className = 'tab' + (tab.id === activeId ? ' active' : '');
-    el.innerHTML = `<span>${tab.title || 'New Tab'}</span><span class="close-btn">&times;</span>`;
-    el.querySelector('span').onclick = () => {
+    el.innerHTML = `<span class="tab-title">${tab.title || 'New Tab'}</span><span class="close-btn material-symbols-outlined" style="font-size:14px;">close</span>`;
+    el.querySelector('.tab-title').onclick = () => {
       activeId = tab.id;
       window.dragon.switchTab(tab.id);
-      addressBar.value = (tab.url || '').startsWith('file://') ? '' : (tab.url || '');
-      renderTabs(tabs);
+      addressBar.value = displayUrl(tab.url);
+      renderTabs();
     };
     el.querySelector('.close-btn').onclick = (e) => {
       e.stopPropagation();
       window.dragon.closeTab(tab.id);
     };
-    tabsContainer.appendChild(el);
+    tabsStrip.appendChild(el);
   });
 }
 
-let tabsState = [];
-
 document.getElementById('new-tab-btn').onclick = () => window.dragon.newTab();
-document.getElementById('back').onclick = () => window.dragon.goBack(activeId);
-document.getElementById('forward').onclick = () => window.dragon.goForward(activeId);
+document.getElementById('home').onclick = () => window.dragon.newTab();
+backBtn.onclick = () => window.dragon.goBack(activeId);
+forwardBtn.onclick = () => window.dragon.goForward(activeId);
 document.getElementById('reload').onclick = () => window.dragon.reload(activeId);
 
 addressBar.addEventListener('keydown', (e) => {
@@ -38,25 +46,40 @@ addressBar.addEventListener('keydown', (e) => {
 window.dragon.onTabCreated(({ id, url }) => {
   tabsState.push({ id, title: 'New Tab', url });
   activeId = id;
-  addressBar.value = url.startsWith('file://') ? '' : url;
-  renderTabs(tabsState);
+  addressBar.value = displayUrl(url);
+  renderTabs();
 });
 
 window.dragon.onTabClosed(({ id }) => {
   tabsState = tabsState.filter(t => t.id !== id);
-  renderTabs(tabsState);
+  renderTabs();
 });
 
 window.dragon.onTitleUpdated(({ id, title }) => {
   const tab = tabsState.find(t => t.id === id);
   if (tab) tab.title = title;
-  renderTabs(tabsState);
+  renderTabs();
 });
 
 window.dragon.onUrlUpdated(({ id, url }) => {
   const tab = tabsState.find(t => t.id === id);
   if (tab) tab.url = url;
-  if (id === activeId) addressBar.value = url.startsWith('file://') ? '' : url;
+  if (id === activeId) addressBar.value = displayUrl(url);
+});
+
+// ---------- شريط تحميل الصفحة (2px أحمر) ----------
+window.dragon.onLoadingStart(({ id }) => {
+  if (id !== activeId) return;
+  progressBar.classList.add('loading');
+  progressBar.style.width = '30%';
+});
+window.dragon.onLoadingStop(({ id }) => {
+  if (id !== activeId) return;
+  progressBar.style.width = '100%';
+  setTimeout(() => {
+    progressBar.classList.remove('loading');
+    progressBar.style.width = '0%';
+  }, 250);
 });
 
 // ---------- الإضافات (Extensions) ----------
@@ -83,6 +106,7 @@ async function refreshExtensionsList() {
 }
 
 extBtn.onclick = () => {
+  document.getElementById('menu-panel').classList.remove('open');
   extPanel.classList.toggle('open');
   if (extPanel.classList.contains('open')) refreshExtensionsList();
 };
@@ -102,3 +126,22 @@ extInstallBtn.onclick = async () => {
     extStatus.textContent = `❌ ${result.error}`;
   }
 };
+
+// ---------- قائمة "..." ----------
+const menuPanel = document.getElementById('menu-panel');
+document.getElementById('menu-btn').onclick = () => {
+  extPanel.classList.remove('open');
+  menuPanel.classList.toggle('open');
+};
+document.getElementById('menu-new-tab').onclick = () => { window.dragon.newTab(); menuPanel.classList.remove('open'); };
+document.getElementById('menu-reload').onclick = () => { window.dragon.reload(activeId); menuPanel.classList.remove('open'); };
+document.getElementById('menu-home').onclick = () => { window.dragon.newTab(); menuPanel.classList.remove('open'); };
+
+document.addEventListener('click', (e) => {
+  if (!extPanel.contains(e.target) && e.target.id !== 'extensions-btn' && !document.getElementById('extensions-btn').contains(e.target)) {
+    extPanel.classList.remove('open');
+  }
+  if (!menuPanel.contains(e.target) && e.target.id !== 'menu-btn' && !document.getElementById('menu-btn').contains(e.target)) {
+    menuPanel.classList.remove('open');
+  }
+});
