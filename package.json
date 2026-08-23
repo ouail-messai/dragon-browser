@@ -49,6 +49,21 @@
       "icon": "build/icon.png",
       "artifactName": "Dragon-Browser-Windows-Setup.exe"
     },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationLocation": true,
+      "allowElevation": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Dragon Browser",
+      "installerIcon": "build/icon.png",
+      "uninstallerIcon": "build/icon.png",
+      "installerHeaderIcon": "build/icon.png",
+      "artifactName": "Dragon-Browser-Windows-Setup.exe",
+      "deleteAppDataOnUninstall": false,
+      "displayLanguageSelector": false
+    },
     "mac": {
       "target": ["dmg"],
       "icon": "build/icon.png",

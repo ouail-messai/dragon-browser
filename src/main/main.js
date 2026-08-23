@@ -69,15 +69,10 @@ function createMainWindow() {
 
   mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
 
-  // مشكلة كانت هنا: كي تكبّر/تصغّر النافذة (maximize/unmaximize)، حدث 'resize' وحدو ما كافيش —
-  // البعد الحقيقي للنافذة (getContentBounds) ما يكونش جاهز فوري 100%، فكنا نحسبو المقاس القديم ونعطيه للـ BrowserView.
-  // نزيدو نستمعو لكل الأحداث المعنية + نأخرو الحساب بـ setImmediate باش ناخذو القياس الصحيح الطازج.
-  const scheduleResize = () => setImmediate(() => resizeActiveView());
-  mainWindow.on('resize', scheduleResize);
-  mainWindow.on('maximize', scheduleResize);
-  mainWindow.on('unmaximize', scheduleResize);
-  mainWindow.on('enter-full-screen', scheduleResize);
-  mainWindow.on('leave-full-screen', scheduleResize);
+  // ملاحظة صادقة: جربنا حل يدوي (نحسبو المقاس بـ JS في كل مرة نستقبل حدث resize) وطلع فيه bug —
+  // كنا نحسبو يدويا **و** نخليو Electron يحسب تلقائيا (autoResize) في نفس الوقت، فكانو يتضاربو
+  // ويزيدو "ينحرفو" مع كل تكبير/تصغير متتالي. الحل النهائي: نعتمدو على آلية Electron الأصلية
+  // (setAutoResize) وحدها بلا أي حساب يدوي بعدها — أثبت بزاف وما فيهاش سباق توقيت (race condition).
 
   // أول تبويب افتراضي
   mainWindow.webContents.on('did-finish-load', () => {
@@ -286,6 +281,9 @@ function startAutoSuspendLoop() {
   }, SUSPEND_CHECK_INTERVAL);
 }
 
+// نحسب المقاس مرة وحدة (وقت إنشاء/تبديل التبويب)، وبعدها نخلي Electron نفسها تتابع أي تغيير حجم
+// للنافذة (تكبير/تصغير/تعظيم) عبر setAutoResize — آلية أصلية داخل Electron، ماشي حساب يدوي بـ JS
+// عرضة لمشاكل التوقيت. هذا هو الفرق الجوهري اللي يصلح "الانحراف" اللي كان يصير عند التكبير.
 function resizeActiveView() {
   if (!activeTabId) return;
   const view = views.get(activeTabId);
@@ -297,8 +295,7 @@ function resizeActiveView() {
     width: bounds.width,
     height: Math.max(0, bounds.height - TOOLBAR_HEIGHT)
   });
-  // ملاحظة: ما نستعملوش setAutoResize هنا عمدا — كان يتضارب مع الحساب اليدوي فوق (مرتين resize مختلفين لنفس الحدث)
-  // وهذا بالضبط كان يسبب "الفساد" اللي كنت تشوفو عند تكبير/تصغير النافذة. الحساب اليدوي وحدو كافي وأدق.
+  view.setAutoResize({ width: true, height: true, horizontal: false, vertical: false });
 }
 
 // ---------- IPC: التواصل بين الواجهة (شريط العنوان/التبويبات) ونواة المتصفح ----------
