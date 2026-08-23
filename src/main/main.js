@@ -25,13 +25,11 @@ function setupSilentAutoUpdate() {
   setInterval(check, 2 * 60 * 60 * 1000); // نعاود نتفقد كل ساعتين
 }
 
-// ---------- تحسينات أداء عامة (تقلل استهلاك RAM/CPU) ----------
-// V8: تحديد سقف الذاكرة لكل عملية رندرة بدل ما تكبر بلا حدود
-app.commandLine.appendSwitch('js-flags', '--max-old-space-size=256');
-// تعطيل تسريع الأجهزة إذا الجهاز ضعيف يقلل استهلاك CPU/GPU (يبقى قابل للتفعيل لاحقا كخيار في الإعدادات)
-// app.commandLine.appendSwitch('disable-gpu'); // نخليها معطلة افتراضيا، تفعّل فقط لو المستخدم يحب "وضع توفير الطاقة"
+// ---------- تحسينات أداء عامة (تقلل استهلاك RAM/CPU بلا ما تكسر المواقع) ----------
+// ملاحظة صادقة: كان عندنا حد أقصى لذاكرة V8 (256MB) مطبق على كل صفحة — هذا كان يخلي مواقع تقيلة بالجافاسكريبت
+// (كيما YouTube) تطيح (crash صامت، شاشة سوداء بلا خطأ). شلناه نهائيا لأنه يكسر الوظيفة الأساسية للمتصفح.
+// التحسين الحقيقي والآمن هو Tab Suspension (تحت) اللي يحرر الرام من تبويبات ما تستخدمهاش، بلا ما يأثر على أي صفحة مفتوحة فعليا.
 app.commandLine.appendSwitch('disable-background-timer-throttling', 'false'); // نخلي throttling شغال (يوفر CPU للتبويبات الخلفية)
-app.commandLine.appendSwitch('renderer-process-limit', '4'); // يحد عدد عمليات الرندرة المتوازية
 
 let mainWindow;
 let views = new Map(); // tabId -> BrowserView (نشيطة فقط)
@@ -116,6 +114,16 @@ function blockAdPopups(view) {
   });
 }
 
+// إذا صفحة طاحت (crash) لأي سبب، نعاود نحملها أوتوماتيكيا بدل ما تبقى شاشة سوداء بلا تفسير
+function attachCrashRecovery(view) {
+  view.webContents.on('render-process-gone', (event, details) => {
+    console.error(`[Dragon Browser] Renderer crashed (reason: ${details.reason}), reloading...`);
+    if (!view.webContents.isDestroyed()) {
+      setTimeout(() => view.webContents.reload(), 300);
+    }
+  });
+}
+
 // ---------- إدارة التبويبات (مع تحسينات ذاكرة) ----------
 function createTab(url = NEW_TAB_URL) {
   const id = ++tabCounter;
@@ -136,6 +144,7 @@ function createTab(url = NEW_TAB_URL) {
   lastActiveTime.set(id, Date.now());
   enforceHttpsOnView(view);
   blockAdPopups(view);
+  attachCrashRecovery(view);
 
   view.webContents.on('page-title-updated', (e, title) => {
     mainWindow.webContents.send('tab-title-updated', { id, title });
@@ -212,6 +221,7 @@ function resumeTab(id, url) {
   suspendedTabs.delete(id);
   enforceHttpsOnView(view);
   blockAdPopups(view);
+  attachCrashRecovery(view);
 
   view.webContents.on('page-title-updated', (e, title) => {
     mainWindow.webContents.send('tab-title-updated', { id, title });
