@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 
 <html class="dark" lang="en" style=""><head>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Dragon Browser | The Web, Reclaimed</title>
@@ -95,19 +97,11 @@
             }
         }
     </script>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=block" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <style>
         body { background-color: #141824; }
-        /* إخفاء نص الأيقونات الخام (download, laptop_windows...) لحد ما خط Material Symbols يتحمل كامل، تفاديا لفساد الكتابة عند التحميل/الريفريش */
-        .material-symbols-outlined {
-            opacity: 0;
-            transition: opacity 0.15s ease;
-        }
-        .fonts-loaded .material-symbols-outlined {
-            opacity: 1;
-        }
+        /* Material Symbols محملة بـ display=block، يعني تتحمل قبل ما يبان أي نص/أيقونة — بلا فلاش */
         .glass-panel {
             background: rgba(31, 37, 53, 0.8);
             backdrop-filter: blur(20px);
@@ -473,17 +467,6 @@ void main() {
 </footer>
 <!-- Simple Scroll Reveal Script -->
 <script>
-        // كي يخلص خط الأيقونات (Material Symbols) التحميل، نوري الأيقونات (نمنع فساد الكتابة عند التحميل الأول أو الريفريش)
-        if (document.fonts && document.fonts.ready) {
-            document.fonts.ready.then(() => {
-                document.documentElement.classList.add('fonts-loaded');
-            });
-            // حماية إضافية: إذا تأخر الخط لأي سبب، نوري الأيقونات بعد 1.5 ثانية بكل الأحوال
-            setTimeout(() => document.documentElement.classList.add('fonts-loaded'), 1500);
-        } else {
-            document.documentElement.classList.add('fonts-loaded');
-        }
-
         document.addEventListener('DOMContentLoaded', () => {
             const reveals = document.querySelectorAll('.reveal');
             
