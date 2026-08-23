@@ -3,6 +3,7 @@ const path = require('path');
 const { ElectronBlocker } = require('@cliqz/adblocker-electron');
 const fetch = require('cross-fetch');
 const Store = require('electron-store');
+const extensionsManager = require('./extensions');
 
 const store = new Store();
 
@@ -24,6 +25,9 @@ let tabCounter = 0;
 const TOOLBAR_HEIGHT = 84; // مساحة شريط العنوان + التبويبات فوق كل صفحة
 const SUSPEND_AFTER_MS = 5 * 60 * 1000; // نوقف أي تبويب غير نشيط بعد 5 دقايق باش نحرر الرام
 const SUSPEND_CHECK_INTERVAL = 60 * 1000; // نفحص كل دقيقة
+
+// User-Agent واقعي (كروم حقيقي) — Electron افتراضيا يعرّف روحو كـ"Electron" وهذا يخلي مواقع كثيرة (منها YouTube) ترفضو أو تعطي نسخة معطلة
+const REAL_CHROME_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
 
 // ---------- إنشاء النافذة الرئيسية ----------
 function createMainWindow() {
@@ -53,25 +57,44 @@ function createMainWindow() {
 
 // ---------- تفعيل حجب الإعلانات والتتبع (built-in, بلا إضافات) ----------
 async function setupAdBlocker() {
+  // User-Agent حقيقي لكل الجلسة — يصلح مواقع كثيرة (منها YouTube) اللي كانت ترفض Electron الافتراضي
+  session.defaultSession.setUserAgent(REAL_CHROME_UA);
+
   const blocker = await ElectronBlocker.fromPrebuiltAdsAndTracking(fetch, {
     path: path.join(app.getPath('userData'), 'adblocker-engine.bin'),
     read: require('fs').promises.readFile,
     write: require('fs').promises.writeFile
   });
 
+  // هذا هو الـ handler الوحيد المسموح به لـ onBeforeRequest في الـ session —
+  // لازم يكون واحد فقط، فخليناه هو المسؤول على الحجب + فرض HTTPS مع بعض (بدل ما يتلغاو من بعضهم)
   blocker.enableBlockingInSession(session.defaultSession);
-
-  // فرض HTTPS كل ما أمكن (حماية إضافية)
-  session.defaultSession.webRequest.onBeforeRequest({ urls: ['http://*/*'] }, (details, callback) => {
-    if (details.resourceType === 'mainFrame' && !details.url.startsWith('http://localhost')) {
-      callback({ redirectURL: details.url.replace('http://', 'https://') });
-    } else {
-      callback({});
-    }
-  });
 
   console.log('[Dragon Browser] Ad & tracker blocker: ACTIVE');
   return blocker;
+}
+
+// ---------- فرض HTTPS (بطريقة ما تلغيش حاجب الإعلانات) ----------
+// نديروها عبر will-navigate بدل webRequest.onBeforeRequest، باش ما يتضاربش مع الـ blocker
+function enforceHttpsOnView(view) {
+  view.webContents.on('will-navigate', (event, url) => {
+    if (url.startsWith('http://') && !url.startsWith('http://localhost')) {
+      event.preventDefault();
+      view.webContents.loadURL(url.replace('http://', 'https://'));
+    }
+  });
+}
+
+// ---------- حجب popup الإعلانات (نوافذ جديدة غير مرغوبة) ----------
+// إعلانات كثيرة تفتح نافذة جديدة بدل ما تكون مجرد request عادي، وهذا حاجب الإعلانات وحده ما يوقفوش
+function blockAdPopups(view) {
+  view.webContents.setWindowOpenHandler(({ url, disposition }) => {
+    // نفتحو أي رابط "target=_blank" شرعي كتبويب جديد عندنا، بدل ما نخليو نافذة منفصلة (اللي غالبا تكون إعلان/popunder)
+    if (disposition === 'foreground-tab' || disposition === 'background-tab' || disposition === 'new-window') {
+      createTab(url);
+    }
+    return { action: 'deny' }; // نمنع أي نافذة Electron منفصلة تنفتح بروحها (أغلبها إعلانات)
+  });
 }
 
 // ---------- إدارة التبويبات (مع تحسينات ذاكرة) ----------
@@ -92,6 +115,8 @@ function createTab(url = 'https://www.google.com') {
   views.set(id, view);
   view.webContents.loadURL(url);
   lastActiveTime.set(id, Date.now());
+  enforceHttpsOnView(view);
+  blockAdPopups(view);
 
   view.webContents.on('page-title-updated', (e, title) => {
     mainWindow.webContents.send('tab-title-updated', { id, title });
@@ -166,6 +191,8 @@ function resumeTab(id, url) {
   views.set(id, view);
   view.webContents.loadURL(url);
   suspendedTabs.delete(id);
+  enforceHttpsOnView(view);
+  blockAdPopups(view);
 
   view.webContents.on('page-title-updated', (e, title) => {
     mainWindow.webContents.send('tab-title-updated', { id, title });
@@ -220,9 +247,25 @@ ipcMain.on('go-back', (e, id) => views.get(id)?.webContents.goBack());
 ipcMain.on('go-forward', (e, id) => views.get(id)?.webContents.goForward());
 ipcMain.on('reload', (e, id) => views.get(id)?.webContents.reload());
 
+// ---------- IPC: الإضافات (Extensions) ----------
+ipcMain.handle('install-extension', async (e, extensionIdOrUrl) => {
+  try {
+    const result = await extensionsManager.installExtension(extensionIdOrUrl);
+    return { success: true, extension: result };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+ipcMain.handle('list-extensions', () => extensionsManager.listInstalledExtensions());
+ipcMain.handle('remove-extension', (e, id) => {
+  extensionsManager.removeExtension(id);
+  return true;
+});
+
 // ---------- دورة حياة التطبيق ----------
 app.whenReady().then(async () => {
   await setupAdBlocker();
+  await extensionsManager.loadSavedExtensions(); // نعاود نحمّل الإضافات اللي كانت منصبة من قبل
   createMainWindow();
   startAutoSuspendLoop(); // يبدا مراقبة التبويبات غير النشيطة لتحرير الرام تلقائيا
 

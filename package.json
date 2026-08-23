@@ -23,7 +23,8 @@
   "dependencies": {
     "@cliqz/adblocker-electron": "^1.30.0",
     "cross-fetch": "^4.0.0",
-    "electron-store": "^8.2.0"
+    "electron-store": "^8.2.0",
+    "extract-zip": "^2.0.1"
   },
   "build": {
     "appId": "com.dragonbrowser.app",

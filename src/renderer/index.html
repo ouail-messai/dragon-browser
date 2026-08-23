@@ -105,6 +105,60 @@
     font-size: 14px;
     cursor: default;
   }
+  #extensions-btn {
+    -webkit-app-region: no-drag;
+    width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 8px;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 16px;
+  }
+  #extensions-btn:hover { background: var(--bg-panel); color: var(--text); }
+
+  #ext-panel {
+    display: none;
+    position: fixed;
+    top: 78px; right: 10px;
+    width: 320px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    z-index: 999;
+    -webkit-app-region: no-drag;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  }
+  #ext-panel.open { display: block; }
+  #ext-panel h3 { font-size: 13px; margin-bottom: 8px; color: var(--text); }
+  #ext-panel .hint { font-size: 11px; color: var(--text-dim); margin-bottom: 10px; line-height: 1.5; }
+  #ext-id-input {
+    width: 100%;
+    background: var(--bg-dark);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    padding: 8px;
+    font-size: 12px;
+    margin-bottom: 8px;
+    outline: none;
+  }
+  #ext-id-input:focus { border-color: var(--red); }
+  #ext-install-btn {
+    width: 100%;
+    background: var(--red);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  #ext-status { font-size: 11px; margin-top: 8px; color: var(--text-dim); line-height: 1.5; }
+  #ext-list { margin-top: 12px; max-height: 160px; overflow-y: auto; }
+  .ext-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-top: 1px solid var(--border); font-size: 11px; }
+  .ext-item .remove { color: var(--red); cursor: pointer; }
 </style>
 </head>
 <body>
@@ -117,8 +171,19 @@
     <div class="nav-btn" id="forward">&#8594;</div>
     <div class="nav-btn" id="reload">&#8635;</div>
     <input id="address-bar" type="text" placeholder="Search or enter address" />
+    <div id="extensions-btn" title="Extensions">&#129513;</div>
     <div id="shield" title="Ad & tracker blocking active">&#128737;</div>
   </div>
+
+  <div id="ext-panel">
+    <h3>Extensions</h3>
+    <p class="hint">الصق ID أو رابط الإضافة من Chrome Web Store. دعم تجريبي — بعض الإضافات المعقدة قد ما تخدمش 100%.</p>
+    <input id="ext-id-input" type="text" placeholder="Extension ID or Chrome Web Store URL" />
+    <button id="ext-install-btn">Install</button>
+    <div id="ext-status"></div>
+    <div id="ext-list"></div>
+  </div>
+
   <script src="./renderer.js"></script>
 </body>
 </html>
