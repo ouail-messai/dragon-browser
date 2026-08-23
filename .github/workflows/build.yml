@@ -21,6 +21,17 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Bump version (auto-update needs an increasing version number)
+        shell: bash
+        run: |
+          node -e "
+            const fs = require('fs');
+            const p = require('./package.json');
+            p.version = '0.1.' + process.env.GITHUB_RUN_NUMBER;
+            fs.writeFileSync('./package.json', JSON.stringify(p, null, 2));
+            console.log('version set to', p.version);
+          "
+
       - name: Build (Windows)
         if: matrix.os == 'windows-latest'
         run: npm run dist:win
@@ -55,7 +66,7 @@ jobs:
       - name: Flatten installer files
         run: |
           mkdir -p to-release
-          find downloaded -type f \( -name "*.exe" -o -name "*.dmg" -o -name "*.AppImage" -o -name "*.deb" \) -exec cp {} to-release/ \;
+          find downloaded -type f \( -name "*.exe" -o -name "*.dmg" -o -name "*.AppImage" -o -name "*.deb" -o -name "*.yml" -o -name "*.blockmap" \) -exec cp {} to-release/ \;
           ls -la to-release
 
       - name: Publish GitHub Release

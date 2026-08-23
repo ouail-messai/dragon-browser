@@ -27,9 +27,17 @@
     height: 40px;
     background: var(--bg-panel);
     border-bottom: 1px solid var(--border);
-    padding: 0 8px;
+    padding: 0 10px;
     gap: 4px;
     -webkit-app-region: drag;
+  }
+  #brand-mark {
+    -webkit-app-region: no-drag;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    margin-right: 8px;
+    flex-shrink: 0;
+    filter: drop-shadow(0 0 4px rgba(196,30,58,0.5));
   }
   .tab {
     -webkit-app-region: no-drag;
@@ -50,6 +58,7 @@
   .tab.active {
     background: var(--bg-dark);
     color: var(--text);
+    box-shadow: inset 0 -2px 0 0 var(--red);
   }
   .tab .close-btn {
     opacity: 0.6;
@@ -163,6 +172,7 @@
 </head>
 <body>
   <div id="tabbar">
+    <img id="brand-mark" src="./assets/dragon-logo.png" alt="Dragon" onerror="this.style.display='none'" />
     <div id="tabs-container" style="display:flex; gap:4px;"></div>
     <div id="new-tab-btn">+</div>
   </div>

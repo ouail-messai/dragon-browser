@@ -3,9 +3,27 @@ const path = require('path');
 const { ElectronBlocker } = require('@cliqz/adblocker-electron');
 const fetch = require('cross-fetch');
 const Store = require('electron-store');
+const { autoUpdater } = require('electron-updater');
 const extensionsManager = require('./extensions');
 
 const store = new Store();
+
+// ---------- تحديث تلقائي صامت (بلا أي تنبيه أو تدخل من المستخدم) ----------
+// يتفقد نسخة جديدة على GitHub Releases، ينزلها في الخلفية، ويركبها لوحدو المرة الجاية اللي يسكر/يعاود يفتح فيها البرنامج
+autoUpdater.autoDownload = true;
+autoUpdater.autoInstallOnAppQuit = true;
+autoUpdater.logger = null; // بلا أي log مرئي أو نافذة
+
+function setupSilentAutoUpdate() {
+  autoUpdater.on('error', () => {}); // نبلع أي خطأ بصمت (مثلا ما كاين انترنت) بلا ما نزعج المستخدم
+  autoUpdater.on('update-downloaded', () => {
+    // النسخة الجديدة جاهزة، راح تترکب لوحدها عند أول إغلاق طبيعي للبرنامج
+  });
+
+  const check = () => autoUpdater.checkForUpdates().catch(() => {});
+  check();
+  setInterval(check, 2 * 60 * 60 * 1000); // نعاود نتفقد كل ساعتين
+}
 
 // ---------- تحسينات أداء عامة (تقلل استهلاك RAM/CPU) ----------
 // V8: تحديد سقف الذاكرة لكل عملية رندرة بدل ما تكبر بلا حدود
@@ -26,6 +44,7 @@ const TOOLBAR_HEIGHT = 84; // مساحة شريط العنوان + التبوي�
 const SUSPEND_AFTER_MS = 5 * 60 * 1000; // نوقف أي تبويب غير نشيط بعد 5 دقايق باش نحرر الرام
 const SUSPEND_CHECK_INTERVAL = 60 * 1000; // نفحص كل دقيقة
 
+const NEW_TAB_URL = 'file://' + path.join(__dirname, '../renderer/newtab.html');
 // User-Agent واقعي (كروم حقيقي) — Electron افتراضيا يعرّف روحو كـ"Electron" وهذا يخلي مواقع كثيرة (منها YouTube) ترفضو أو تعطي نسخة معطلة
 const REAL_CHROME_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
 
@@ -51,7 +70,7 @@ function createMainWindow() {
 
   // أول تبويب افتراضي
   mainWindow.webContents.on('did-finish-load', () => {
-    createTab('https://www.google.com');
+    createTab(NEW_TAB_URL);
   });
 }
 
@@ -98,7 +117,7 @@ function blockAdPopups(view) {
 }
 
 // ---------- إدارة التبويبات (مع تحسينات ذاكرة) ----------
-function createTab(url = 'https://www.google.com') {
+function createTab(url = NEW_TAB_URL) {
   const id = ++tabCounter;
   const view = new BrowserView({
     webPreferences: {
@@ -268,6 +287,7 @@ app.whenReady().then(async () => {
   await extensionsManager.loadSavedExtensions(); // نعاود نحمّل الإضافات اللي كانت منصبة من قبل
   createMainWindow();
   startAutoSuspendLoop(); // يبدا مراقبة التبويبات غير النشيطة لتحرير الرام تلقائيا
+  setupSilentAutoUpdate(); // يبدا التحقق من التحديثات في الخلفية، بصمت تام
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createMainWindow();

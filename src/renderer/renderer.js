@@ -11,6 +11,7 @@ function renderTabs(tabs) {
     el.querySelector('span').onclick = () => {
       activeId = tab.id;
       window.dragon.switchTab(tab.id);
+      addressBar.value = (tab.url || '').startsWith('file://') ? '' : (tab.url || '');
       renderTabs(tabs);
     };
     el.querySelector('.close-btn').onclick = (e) => {
@@ -23,7 +24,7 @@ function renderTabs(tabs) {
 
 let tabsState = [];
 
-document.getElementById('new-tab-btn').onclick = () => window.dragon.newTab('https://www.google.com');
+document.getElementById('new-tab-btn').onclick = () => window.dragon.newTab();
 document.getElementById('back').onclick = () => window.dragon.goBack(activeId);
 document.getElementById('forward').onclick = () => window.dragon.goForward(activeId);
 document.getElementById('reload').onclick = () => window.dragon.reload(activeId);
@@ -37,7 +38,7 @@ addressBar.addEventListener('keydown', (e) => {
 window.dragon.onTabCreated(({ id, url }) => {
   tabsState.push({ id, title: 'New Tab', url });
   activeId = id;
-  addressBar.value = url;
+  addressBar.value = url.startsWith('file://') ? '' : url;
   renderTabs(tabsState);
 });
 
@@ -55,7 +56,7 @@ window.dragon.onTitleUpdated(({ id, title }) => {
 window.dragon.onUrlUpdated(({ id, url }) => {
   const tab = tabsState.find(t => t.id === id);
   if (tab) tab.url = url;
-  if (id === activeId) addressBar.value = url;
+  if (id === activeId) addressBar.value = url.startsWith('file://') ? '' : url;
 });
 
 // ---------- الإضافات (Extensions) ----------
