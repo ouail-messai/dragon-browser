@@ -8,6 +8,7 @@ on:
 jobs:
   build:
     strategy:
+      fail-fast: false # مهم: نظام وحد يطيح ما يلغيش الأنظمة الأخرى (كانو يلغاو بلا داعي حتى لو كانو راح ينجحو)
       matrix:
         os: [windows-latest, macos-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
@@ -20,6 +21,12 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+
+      - name: Fix execute permissions on Linux build tools (fixes ERR_ELECTRON_BUILDER_CANNOT_EXECUTE)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          find node_modules/app-builder-bin -type f -name "app-builder" -exec chmod +x {} \;
+          find node_modules -type d -name "*.app" -prune -o -type f \( -path "*linux*" -o -path "*mac*" \) -exec chmod +x {} \; 2>/dev/null || true
 
       - name: Bump version (auto-update needs an increasing version number)
         shell: bash
@@ -52,6 +59,7 @@ jobs:
 
   release:
     needs: build
+    if: ${{ !cancelled() }} # ننشر حتى لو نظام وحد طاح — الأنظمة الناجحة الأخرى ما تتلغاش
     runs-on: ubuntu-latest
     permissions:
       contents: write
