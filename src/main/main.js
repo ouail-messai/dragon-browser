@@ -164,6 +164,16 @@ function attachTabEvents(id, view) {
   view.webContents.on('did-stop-loading', () => {
     mainWindow.webContents.send('tab-loading-stop', { id });
   });
+
+  // إذا صفحة فشلت تحميل فعليا (ماشي إلغاء عادي)، نوري صفحة خطأ واضحة فيها السبب —
+  // بدل ما تبقى شاشة سوداء صامتة بلا أي تفسير (هذا كان يصعب علينا نعرفو وين المشكل بالضبط)
+  view.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL, isMainFrame) => {
+    if (!isMainFrame) return; // نتجاهل فشل موارد فرعية (صور/إعلانات محجوبة...)، نهتمو غير بفشل الصفحة الرئيسية
+    if (errorCode === -3) return; // -3 = ABORTED، يصير عادي عند إلغاء تنقل أو تحويل، ماشي خطأ حقيقي
+    const errPage = 'file://' + path.join(__dirname, '../renderer/error-page.html')
+      + `?code=${errorCode}&desc=${encodeURIComponent(errorDescription)}&url=${encodeURIComponent(validatedURL)}`;
+    view.webContents.loadURL(errPage);
+  });
 }
 
 // ---------- إدارة التبويبات (مع تحسينات ذاكرة) ----------
@@ -177,7 +187,8 @@ function createTab(url = NEW_TAB_URL) {
       backgroundThrottling: true, // يبطّئ تلقائيا JS/timers في التبويبات غير الظاهرة (يوفر CPU)
       spellcheck: false, // تعطيل التدقيق الإملائي المدمج يقلل استهلاك الذاكرة والـCPU
       webgl: true,
-      enableWebSQL: false // ميزة قديمة غير مستخدمة، تعطيلها يقلل overhead
+      enableWebSQL: false, // ميزة قديمة غير مستخدمة، تعطيلها يقلل overhead
+      preload: path.join(__dirname, '../renderer/tab-preload.js') // خفيف، يخدم غير مع صفحاتنا الداخلية
     }
   });
 
@@ -249,7 +260,8 @@ function resumeTab(id, url) {
       nodeIntegration: false,
       sandbox: true,
       backgroundThrottling: true,
-      spellcheck: false
+      spellcheck: false,
+      preload: path.join(__dirname, '../renderer/tab-preload.js')
     }
   });
   views.set(id, view);
@@ -304,11 +316,18 @@ ipcMain.on('switch-tab', (e, id) => switchTab(id));
 ipcMain.on('close-tab', (e, id) => closeTab(id));
 ipcMain.on('navigate', (e, { id, url }) => {
   const view = views.get(id);
-  if (view) view.webContents.loadURL(url.startsWith('http') ? url : `https://www.google.com/search?q=${encodeURIComponent(url)}`);
+  if (!view) return;
+  if (url === 'dragon://extensions') {
+    view.webContents.loadFile(path.join(__dirname, '../renderer/extensions-page.html'));
+    return;
+  }
+  view.webContents.loadURL(url.startsWith('http') ? url : `https://www.google.com/search?q=${encodeURIComponent(url)}`);
 });
 ipcMain.on('go-back', (e, id) => views.get(id)?.webContents.goBack());
 ipcMain.on('go-forward', (e, id) => views.get(id)?.webContents.goForward());
 ipcMain.on('reload', (e, id) => views.get(id)?.webContents.reload());
+ipcMain.on('open-devtools', (e, id) => views.get(id)?.webContents.openDevTools({ mode: 'detach' }));
+ipcMain.on('open-devtools-self', (e) => e.sender.openDevTools({ mode: 'detach' }));
 
 // ---------- IPC: الإضافات (Extensions) ----------
 ipcMain.handle('install-extension', async (e, extensionIdOrUrl) => {
@@ -323,6 +342,14 @@ ipcMain.handle('list-extensions', () => extensionsManager.listInstalledExtension
 ipcMain.handle('remove-extension', (e, id) => {
   extensionsManager.removeExtension(id);
   return true;
+});
+ipcMain.handle('toggle-extension', async (e, id, enabled) => {
+  try {
+    await extensionsManager.setExtensionEnabled(id, enabled);
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
 });
 
 // ---------- دورة حياة التطبيق ----------

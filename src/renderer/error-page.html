@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Page failed to load</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@700;800&family=JetBrains+Mono:wght@400;500&display=block" rel="stylesheet">
+<style>
+  :root { --red: #E62129; --navy: #1A222E; --void: #0F141B; --steel: #94A3B8; --border: #1E293B; --text: #FFFFFF; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--void); color: var(--text); font-family: 'Inter', sans-serif;
+    height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+  }
+  h1 { font-family: 'Hanken Grotesk', sans-serif; font-size: 22px; font-weight: 800; }
+  .code {
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--red);
+    background: var(--navy); border: 1px solid var(--border); border-radius: 6px; padding: 10px 16px;
+  }
+  .url { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--steel); max-width: 600px; text-align: center; word-break: break-all; }
+  .actions { display: flex; gap: 10px; margin-top: 8px; }
+  button {
+    border: 1px solid var(--border); background: var(--navy); color: var(--text);
+    padding: 9px 18px; border-radius: 6px; font-size: 13px; cursor: pointer;
+  }
+  button.primary { background: var(--red); border-color: var(--red); }
+  button:hover { opacity: 0.9; }
+</style>
+</head>
+<body>
+  <h1>الصفحة ما قدرتش تحمّل</h1>
+  <div class="code" id="err-code">—</div>
+  <div class="url" id="err-url"></div>
+  <div class="actions">
+    <button class="primary" id="retry-btn">إعادة المحاولة</button>
+    <button id="devtools-btn">فتح Developer Tools</button>
+  </div>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    document.getElementById('err-code').textContent =
+      (params.get('code') || '?') + ' — ' + (params.get('desc') || 'Unknown error');
+    document.getElementById('err-url').textContent = params.get('url') || '';
+
+    document.getElementById('retry-btn').onclick = () => {
+      window.location.href = params.get('url') || 'https://www.google.com';
+    };
+    document.getElementById('devtools-btn').onclick = () => {
+      if (window.dragon) window.dragon.openDevTools();
+    };
+  </script>
+</body>
+</html>

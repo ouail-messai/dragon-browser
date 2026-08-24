@@ -162,52 +162,6 @@
   }
   #progress-bar.loading { opacity: 1; }
 
-  /* ---------- لوحة الإضافات ---------- */
-  #ext-panel {
-    display: none;
-    position: fixed;
-    top: 92px; right: 10px;
-    width: 320px;
-    background: var(--navy);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 14px;
-    z-index: 999;
-    -webkit-app-region: no-drag;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-  }
-  #ext-panel.open { display: block; }
-  #ext-panel h3 { font-family: var(--headline); font-size: 14px; margin-bottom: 8px; }
-  #ext-panel .hint { font-size: 11px; color: var(--steel); margin-bottom: 10px; line-height: 1.5; }
-  #ext-id-input {
-    width: 100%;
-    background: var(--void);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    color: var(--text);
-    padding: 8px;
-    font-family: var(--mono);
-    font-size: 11.5px;
-    margin-bottom: 8px;
-    outline: none;
-  }
-  #ext-id-input:focus { border-color: var(--red); }
-  #ext-install-btn {
-    width: 100%;
-    background: var(--red);
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    padding: 8px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-  #ext-status { font-size: 11px; margin-top: 8px; color: var(--steel); line-height: 1.5; }
-  #ext-list { margin-top: 12px; max-height: 160px; overflow-y: auto; }
-  .ext-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-top: 1px solid var(--border); font-size: 11px; }
-  .ext-item .remove { color: var(--red); cursor: pointer; }
-
   /* ---------- قائمة "..." ---------- */
   #menu-panel {
     display: none;
@@ -255,15 +209,6 @@
 
   <div id="address-row">
     <input id="address-bar" type="text" placeholder="Search or enter address" spellcheck="false" />
-  </div>
-
-  <div id="ext-panel">
-    <h3>Extensions</h3>
-    <p class="hint">الصق ID أو رابط الإضافة من Chrome Web Store. دعم تجريبي — بعض الإضافات المعقدة قد ما تخدمش 100%.</p>
-    <input id="ext-id-input" type="text" placeholder="Extension ID or Chrome Web Store URL" />
-    <button id="ext-install-btn">Install</button>
-    <div id="ext-status"></div>
-    <div id="ext-list"></div>
   </div>
 
   <div id="menu-panel">

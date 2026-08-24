@@ -82,55 +82,15 @@ window.dragon.onLoadingStop(({ id }) => {
   }, 250);
 });
 
-// ---------- الإضافات (Extensions) ----------
-const extPanel = document.getElementById('ext-panel');
-const extBtn = document.getElementById('extensions-btn');
-const extInput = document.getElementById('ext-id-input');
-const extInstallBtn = document.getElementById('ext-install-btn');
-const extStatus = document.getElementById('ext-status');
-const extList = document.getElementById('ext-list');
-
-async function refreshExtensionsList() {
-  const list = await window.dragon.listExtensions();
-  extList.innerHTML = '';
-  list.forEach(ext => {
-    const row = document.createElement('div');
-    row.className = 'ext-item';
-    row.innerHTML = `<span>${ext.name} (v${ext.version})</span><span class="remove">&times;</span>`;
-    row.querySelector('.remove').onclick = async () => {
-      await window.dragon.removeExtension(ext.id);
-      refreshExtensionsList();
-    };
-    extList.appendChild(row);
-  });
-}
-
-extBtn.onclick = () => {
-  document.getElementById('menu-panel').classList.remove('open');
-  extPanel.classList.toggle('open');
-  if (extPanel.classList.contains('open')) refreshExtensionsList();
-};
-
-extInstallBtn.onclick = async () => {
-  const val = extInput.value.trim();
-  if (!val) return;
-  extStatus.textContent = 'جاري التنصيب...';
-  extInstallBtn.disabled = true;
-  const result = await window.dragon.installExtension(val);
-  extInstallBtn.disabled = false;
-  if (result.success) {
-    extStatus.textContent = `✅ تم تنصيب: ${result.extension.name}`;
-    extInput.value = '';
-    refreshExtensionsList();
-  } else {
-    extStatus.textContent = `❌ ${result.error}`;
-  }
+// ---------- الإضافات (Extensions) — تفتح كصفحة كاملة بالتفصيل، ماشي نافذة صغيرة ----------
+document.getElementById('extensions-btn').onclick = () => {
+  window.dragon.newTab();
+  setTimeout(() => window.dragon.navigate(activeId, 'dragon://extensions'), 60);
 };
 
 // ---------- قائمة "..." ----------
 const menuPanel = document.getElementById('menu-panel');
 document.getElementById('menu-btn').onclick = () => {
-  extPanel.classList.remove('open');
   menuPanel.classList.toggle('open');
 };
 document.getElementById('menu-new-tab').onclick = () => { window.dragon.newTab(); menuPanel.classList.remove('open'); };
@@ -138,9 +98,6 @@ document.getElementById('menu-reload').onclick = () => { window.dragon.reload(ac
 document.getElementById('menu-home').onclick = () => { window.dragon.newTab(); menuPanel.classList.remove('open'); };
 
 document.addEventListener('click', (e) => {
-  if (!extPanel.contains(e.target) && e.target.id !== 'extensions-btn' && !document.getElementById('extensions-btn').contains(e.target)) {
-    extPanel.classList.remove('open');
-  }
   if (!menuPanel.contains(e.target) && e.target.id !== 'menu-btn' && !document.getElementById('menu-btn').contains(e.target)) {
     menuPanel.classList.remove('open');
   }
