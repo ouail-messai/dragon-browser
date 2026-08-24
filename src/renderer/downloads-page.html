@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Downloads — Dragon Browser</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=block" rel="stylesheet">
+<style>
+  :root { --red: #E62129; --navy: #1A222E; --void: #0F141B; --steel: #94A3B8; --border: #1E293B; --text: #FFFFFF; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--void); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 40px 24px 80px; }
+  header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+  h1 { font-family: 'Hanken Grotesk', sans-serif; font-size: 24px; font-weight: 800; }
+  #clear-btn {
+    background: var(--navy); border: 1px solid var(--border); color: var(--steel);
+    padding: 7px 14px; border-radius: 6px; font-size: 12px; cursor: pointer;
+  }
+  #clear-btn:hover { border-color: var(--red); color: var(--text); }
+  .item {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--navy); border: 1px solid var(--border); border-radius: 8px;
+    padding: 14px 16px; margin-bottom: 10px;
+  }
+  .icon { width: 36px; height: 36px; border-radius: 8px; background: var(--void); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px; }
+  .icon.ok { color: #3ddc84; }
+  .icon.fail { color: var(--red); }
+  .body { flex: 1; min-width: 0; }
+  .fname { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .meta { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--steel); margin-top: 2px; }
+  .actions { display: flex; gap: 8px; flex-shrink: 0; }
+  .actions button {
+    background: var(--void); border: 1px solid var(--border); color: var(--text);
+    padding: 6px 10px; border-radius: 5px; font-size: 11px; cursor: pointer;
+  }
+  .actions button:hover { border-color: var(--red); }
+  .empty-state { color: var(--steel); font-size: 13px; text-align: center; padding: 60px 0; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Downloads</h1>
+      <button id="clear-btn">Clear list</button>
+    </header>
+    <div id="list"></div>
+  </div>
+  <script>
+    async function render() {
+      const downloads = await window.dragon.getDownloads();
+      const list = document.getElementById('list');
+      if (!downloads.length) {
+        list.innerHTML = '<div class="empty-state">ما فيه أي تنزيلات لحد الآن</div>';
+        return;
+      }
+      list.innerHTML = downloads.map((d, i) => `
+        <div class="item">
+          <div class="icon ${d.state === 'completed' ? 'ok' : 'fail'}">${d.state === 'completed' ? '✓' : '✕'}</div>
+          <div class="body">
+            <div class="fname">${d.filename}</div>
+            <div class="meta">${new Date(d.time).toLocaleString()} · ${d.state}</div>
+          </div>
+          <div class="actions">
+            ${d.state === 'completed' ? `
+              <button data-action="open" data-i="${i}">Open</button>
+              <button data-action="folder" data-i="${i}">Show in folder</button>
+            ` : ''}
+          </div>
+        </div>
+      `).join('');
+
+      list.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const d = downloads[btn.dataset.i];
+          if (btn.dataset.action === 'open') window.dragon.openDownloadFile(d.savePath);
+          else window.dragon.showDownloadInFolder(d.savePath);
+        });
+      });
+    }
+    document.getElementById('clear-btn').addEventListener('click', async () => {
+      await window.dragon.clearDownloads();
+      render();
+    });
+    render();
+  </script>
+</body>
+</html>

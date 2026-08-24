@@ -13,6 +13,13 @@ contextBridge.exposeInMainWorld('dragon', {
   listExtensions: () => ipcRenderer.invoke('list-extensions'),
   removeExtension: (id) => ipcRenderer.invoke('remove-extension', id),
 
+  newWindow: () => ipcRenderer.send('new-window'),
+  exitApp: () => ipcRenderer.send('exit-app'),
+  findInPage: (id, text) => ipcRenderer.send('find-in-page', { id, text }),
+  stopFindInPage: (id) => ipcRenderer.send('stop-find-in-page', id),
+  printPage: (id) => ipcRenderer.send('print-page', id),
+  zoom: (id, action) => ipcRenderer.invoke('zoom', { id, action }),
+
   onTabCreated: (cb) => ipcRenderer.on('tab-created', (e, data) => cb(data)),
   onTabClosed: (cb) => ipcRenderer.on('tab-closed', (e, data) => cb(data)),
   onTitleUpdated: (cb) => ipcRenderer.on('tab-title-updated', (e, data) => cb(data)),

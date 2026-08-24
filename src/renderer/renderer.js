@@ -88,17 +88,49 @@ document.getElementById('extensions-btn').onclick = () => {
   setTimeout(() => window.dragon.navigate(activeId, 'dragon://extensions'), 60);
 };
 
-// ---------- قائمة "..." ----------
+// ---------- قائمة "..." (كاملة كيما Chrome) ----------
 const menuPanel = document.getElementById('menu-panel');
-document.getElementById('menu-btn').onclick = () => {
-  menuPanel.classList.toggle('open');
+const zoomLevelEl = document.getElementById('zoom-level');
+
+function closeMenu() { menuPanel.classList.remove('open'); }
+function openInternal(url) {
+  window.dragon.newTab();
+  setTimeout(() => window.dragon.navigate(activeId, url), 60);
+}
+
+document.getElementById('menu-btn').onclick = () => menuPanel.classList.toggle('open');
+
+document.getElementById('menu-new-tab').onclick = () => { window.dragon.newTab(); closeMenu(); };
+document.getElementById('menu-new-window').onclick = () => { window.dragon.newWindow(); closeMenu(); };
+document.getElementById('menu-history').onclick = () => { openInternal('dragon://history'); closeMenu(); };
+document.getElementById('menu-downloads').onclick = () => { openInternal('dragon://downloads'); closeMenu(); };
+document.getElementById('menu-extensions').onclick = () => { openInternal('dragon://extensions'); closeMenu(); };
+document.getElementById('menu-print').onclick = () => { window.dragon.printPage(activeId); closeMenu(); };
+document.getElementById('menu-reload').onclick = () => { window.dragon.reload(activeId); closeMenu(); };
+document.getElementById('menu-home').onclick = () => { window.dragon.newTab(); closeMenu(); };
+document.getElementById('menu-exit').onclick = () => { window.dragon.exitApp(); };
+
+document.getElementById('zoom-in').onclick = async (e) => {
+  e.stopPropagation();
+  zoomLevelEl.textContent = (await window.dragon.zoom(activeId, 'in')) + '%';
 };
-document.getElementById('menu-new-tab').onclick = () => { window.dragon.newTab(); menuPanel.classList.remove('open'); };
-document.getElementById('menu-reload').onclick = () => { window.dragon.reload(activeId); menuPanel.classList.remove('open'); };
-document.getElementById('menu-home').onclick = () => { window.dragon.newTab(); menuPanel.classList.remove('open'); };
+document.getElementById('zoom-out').onclick = async (e) => {
+  e.stopPropagation();
+  zoomLevelEl.textContent = (await window.dragon.zoom(activeId, 'out')) + '%';
+};
+
+document.getElementById('menu-find').onclick = () => {
+  closeMenu();
+  const text = window.prompt('Find in page:');
+  if (text) window.dragon.findInPage(activeId, text);
+};
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeMenu();
+});
 
 document.addEventListener('click', (e) => {
   if (!menuPanel.contains(e.target) && e.target.id !== 'menu-btn' && !document.getElementById('menu-btn').contains(e.target)) {
-    menuPanel.classList.remove('open');
+    closeMenu();
   }
 });

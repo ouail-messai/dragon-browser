@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>History — Dragon Browser</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=block" rel="stylesheet">
+<style>
+  :root { --red: #E62129; --navy: #1A222E; --void: #0F141B; --steel: #94A3B8; --border: #1E293B; --text: #FFFFFF; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--void); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 40px 24px 80px; }
+  header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+  h1 { font-family: 'Hanken Grotesk', sans-serif; font-size: 24px; font-weight: 800; }
+  #clear-btn {
+    background: var(--navy); border: 1px solid var(--border); color: var(--steel);
+    padding: 7px 14px; border-radius: 6px; font-size: 12px; cursor: pointer;
+  }
+  #clear-btn:hover { border-color: var(--red); color: var(--text); }
+  .day-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--steel); text-transform: uppercase; letter-spacing: 0.06em; margin: 20px 0 8px; }
+  .entry {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px; border-radius: 6px; cursor: pointer;
+  }
+  .entry:hover { background: var(--navy); }
+  .entry .time { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--steel); width: 52px; flex-shrink: 0; }
+  .entry .title { font-size: 13px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .entry .url { font-size: 11px; color: var(--steel); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; }
+  .empty-state { color: var(--steel); font-size: 13px; text-align: center; padding: 60px 0; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>History</h1>
+      <button id="clear-btn">Clear all history</button>
+    </header>
+    <div id="list"></div>
+  </div>
+  <script>
+    async function render() {
+      const history = await window.dragon.getHistory();
+      const list = document.getElementById('list');
+      if (!history.length) {
+        list.innerHTML = '<div class="empty-state">ما فيه أي سجل تصفح لحد الآن</div>';
+        return;
+      }
+      let lastDay = '';
+      let html = '';
+      for (const item of history) {
+        const d = new Date(item.time);
+        const day = d.toLocaleDateString();
+        if (day !== lastDay) {
+          html += `<div class="day-label">${day}</div>`;
+          lastDay = day;
+        }
+        const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        html += `<div class="entry" data-url="${encodeURIComponent(item.url)}">
+          <span class="time">${time}</span>
+          <span class="title">${item.title || item.url}</span>
+          <span class="url">${item.url}</span>
+        </div>`;
+      }
+      list.innerHTML = html;
+      list.querySelectorAll('.entry').forEach(el => {
+        el.addEventListener('click', () => {
+          window.location.href = decodeURIComponent(el.dataset.url);
+        });
+      });
+    }
+    document.getElementById('clear-btn').addEventListener('click', async () => {
+      await window.dragon.clearHistory();
+      render();
+    });
+    render();
+  </script>
+</body>
+</html>

@@ -7,5 +7,11 @@ contextBridge.exposeInMainWorld('dragon', {
   listExtensions: () => ipcRenderer.invoke('list-extensions'),
   installExtension: (idOrUrl) => ipcRenderer.invoke('install-extension', idOrUrl),
   removeExtension: (id) => ipcRenderer.invoke('remove-extension', id),
-  toggleExtension: (id, enabled) => ipcRenderer.invoke('toggle-extension', id, enabled)
+  toggleExtension: (id, enabled) => ipcRenderer.invoke('toggle-extension', id, enabled),
+  getHistory: () => ipcRenderer.invoke('get-history'),
+  clearHistory: () => ipcRenderer.invoke('clear-history'),
+  getDownloads: () => ipcRenderer.invoke('get-downloads'),
+  clearDownloads: () => ipcRenderer.invoke('clear-downloads'),
+  openDownloadFile: (p) => ipcRenderer.invoke('open-download-file', p),
+  showDownloadInFolder: (p) => ipcRenderer.invoke('show-download-in-folder', p)
 });

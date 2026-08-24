@@ -167,7 +167,7 @@
     display: none;
     position: fixed;
     top: 44px; right: 8px;
-    width: 190px;
+    width: 220px;
     background: var(--navy);
     border: 1px solid var(--border);
     border-radius: 6px;
@@ -175,6 +175,8 @@
     z-index: 999;
     -webkit-app-region: no-drag;
     box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    max-height: 80vh;
+    overflow-y: auto;
   }
   #menu-panel.open { display: block; }
   .menu-item {
@@ -186,6 +188,15 @@
   }
   .menu-item:hover { background: rgba(255,255,255,0.06); }
   .menu-item .material-symbols-outlined { font-size: 17px; color: var(--steel); }
+  .menu-sep { height: 1px; background: var(--border); margin: 6px 4px; }
+  .menu-zoom { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; }
+  .menu-zoom .zoom-controls { display: flex; align-items: center; gap: 4px; }
+  .menu-zoom button {
+    width: 24px; height: 24px; border-radius: 4px; border: 1px solid var(--border);
+    background: var(--void); color: var(--text); cursor: pointer; font-size: 13px;
+  }
+  .menu-zoom button:hover { border-color: var(--red); }
+  .menu-zoom .zoom-level { font-family: var(--mono); font-size: 11px; color: var(--steel); width: 36px; text-align: center; }
 </style>
 </head>
 <body>
@@ -213,8 +224,29 @@
 
   <div id="menu-panel">
     <div class="menu-item" id="menu-new-tab"><span class="material-symbols-outlined">add</span> New Tab</div>
+    <div class="menu-item" id="menu-new-window"><span class="material-symbols-outlined">open_in_new</span> New Window</div>
+    <div class="menu-sep"></div>
+    <div class="menu-item" id="menu-history"><span class="material-symbols-outlined">history</span> History</div>
+    <div class="menu-item" id="menu-downloads"><span class="material-symbols-outlined">download</span> Downloads</div>
+    <div class="menu-item" id="menu-extensions"><span class="material-symbols-outlined">extension</span> Extensions</div>
+    <div class="menu-sep"></div>
+    <div class="menu-item" id="menu-find"><span class="material-symbols-outlined">search</span> Find in Page</div>
+    <div class="menu-zoom">
+      <span style="color:var(--steel); display:flex; align-items:center; gap:10px;">
+        <span class="material-symbols-outlined" style="font-size:17px;">zoom_in</span> Zoom
+      </span>
+      <div class="zoom-controls">
+        <button id="zoom-out">−</button>
+        <span class="zoom-level" id="zoom-level">100%</span>
+        <button id="zoom-in">+</button>
+      </div>
+    </div>
+    <div class="menu-item" id="menu-print"><span class="material-symbols-outlined">print</span> Print</div>
+    <div class="menu-sep"></div>
     <div class="menu-item" id="menu-reload"><span class="material-symbols-outlined">refresh</span> Reload Page</div>
     <div class="menu-item" id="menu-home"><span class="material-symbols-outlined">home</span> Home</div>
+    <div class="menu-sep"></div>
+    <div class="menu-item" id="menu-exit"><span class="material-symbols-outlined">logout</span> Exit</div>
   </div>
 
   <script src="./renderer.js"></script>

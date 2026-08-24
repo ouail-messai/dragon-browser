@@ -1,4 +1,4 @@
-const { app, BrowserWindow, BrowserView, ipcMain, session } = require('electron');
+const { app, BrowserWindow, BrowserView, ipcMain, session, shell } = require('electron');
 const path = require('path');
 const { ElectronBlocker } = require('@cliqz/adblocker-electron');
 const fetch = require('cross-fetch');
@@ -7,6 +7,24 @@ const { autoUpdater } = require('electron-updater');
 const extensionsManager = require('./extensions');
 
 const store = new Store();
+
+// ---------- السجل (History) والتنزيلات (Downloads) — محفوظين محليا عبر electron-store ----------
+function addHistoryEntry(url, title) {
+  if (!url || url.startsWith('file://')) return; // نتجاهل صفحاتنا الداخلية (New Tab, Extensions, صفحة الخطأ)
+  const history = store.get('history', []);
+  history.unshift({ url, title: title || url, time: Date.now() });
+  store.set('history', history.slice(0, 1000)); // نحتفظو بآخر 1000 زيارة بس
+}
+function clearHistory() { store.set('history', []); }
+function getHistory() { return store.get('history', []); }
+
+function addDownloadEntry(entry) {
+  const downloads = store.get('downloads', []);
+  downloads.unshift(entry);
+  store.set('downloads', downloads.slice(0, 200));
+}
+function getDownloads() { return store.get('downloads', []); }
+function clearDownloads() { store.set('downloads', []); }
 
 // ---------- تحديث تلقائي صامت (بلا أي تنبيه أو تدخل من المستخدم) ----------
 // يتفقد نسخة جديدة على GitHub Releases، ينزلها في الخلفية، ويركبها لوحدو المرة الجاية اللي يسكر/يعاود يفتح فيها البرنامج
@@ -80,6 +98,24 @@ function createMainWindow() {
   });
 }
 
+// نافذة ثانية بسيطة ومستقلة (بلا تبويبات معقدة) — ملاحظة صادقة: نظام التبويبات الحالي كامل
+// مبني حول نافذة رئيسية وحدة (متغير mainWindow واحد)، فدعم نوافذ متعددة *بتبويباتها الكاملة*
+// يحتاج إعادة هيكلة أكبر. هذي نافذة تصفح حقيقية شغالة، غير بواجهة أبسط (بلا تبويبات/شريط أزرار مخصص).
+function createSecondaryWindow() {
+  const win = new BrowserWindow({
+    width: 1100,
+    height: 750,
+    backgroundColor: '#0F141B',
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+      preload: path.join(__dirname, '../renderer/tab-preload.js')
+    }
+  });
+  win.loadURL(NEW_TAB_URL);
+}
+
 // ---------- تفعيل حجب الإعلانات والتتبع (built-in, بلا إضافات) ----------
 async function setupAdBlocker() {
   // User-Agent حقيقي لكل الجلسة — يصلح مواقع كثيرة (منها YouTube) اللي كانت ترفض Electron الافتراضي
@@ -111,6 +147,17 @@ async function setupAdBlocker() {
   blocker.enableBlockingInSession(session.defaultSession);
 
   console.log('[Dragon Browser] Ad & tracker blocker: ACTIVE');
+
+  // مراقبة التنزيلات (Downloads) — نسجلهم في السجل المحلي باش تبان في قائمة "Downloads"
+  session.defaultSession.on('will-download', (event, item) => {
+    const entry = { filename: item.getFilename(), url: item.getURL(), time: Date.now(), state: 'progressing', savePath: '' };
+    item.once('done', (e, state) => {
+      entry.state = state;
+      entry.savePath = item.getSavePath();
+      addDownloadEntry(entry);
+    });
+  });
+
   return blocker;
 }
 
@@ -151,6 +198,7 @@ function attachCrashRecovery(view) {
 function attachTabEvents(id, view) {
   view.webContents.on('page-title-updated', (e, title) => {
     mainWindow.webContents.send('tab-title-updated', { id, title });
+    addHistoryEntry(view.webContents.getURL(), title);
   });
   view.webContents.on('did-navigate', (e, navUrl) => {
     mainWindow.webContents.send('tab-url-updated', { id, url: navUrl });
@@ -321,6 +369,14 @@ ipcMain.on('navigate', (e, { id, url }) => {
     view.webContents.loadFile(path.join(__dirname, '../renderer/extensions-page.html'));
     return;
   }
+  if (url === 'dragon://history') {
+    view.webContents.loadFile(path.join(__dirname, '../renderer/history-page.html'));
+    return;
+  }
+  if (url === 'dragon://downloads') {
+    view.webContents.loadFile(path.join(__dirname, '../renderer/downloads-page.html'));
+    return;
+  }
   view.webContents.loadURL(url.startsWith('http') ? url : `https://www.google.com/search?q=${encodeURIComponent(url)}`);
 });
 ipcMain.on('go-back', (e, id) => views.get(id)?.webContents.goBack());
@@ -328,6 +384,33 @@ ipcMain.on('go-forward', (e, id) => views.get(id)?.webContents.goForward());
 ipcMain.on('reload', (e, id) => views.get(id)?.webContents.reload());
 ipcMain.on('open-devtools', (e, id) => views.get(id)?.webContents.openDevTools({ mode: 'detach' }));
 ipcMain.on('open-devtools-self', (e) => e.sender.openDevTools({ mode: 'detach' }));
+
+// ---------- IPC: قائمة "..." الكاملة (كيما Chrome) ----------
+ipcMain.on('new-window', () => createSecondaryWindow());
+ipcMain.on('exit-app', () => app.quit());
+ipcMain.on('find-in-page', (e, { id, text }) => {
+  const view = views.get(id);
+  if (view && text) view.webContents.findInPage(text);
+});
+ipcMain.on('stop-find-in-page', (e, id) => views.get(id)?.webContents.stopFindInPage('clearSelection'));
+ipcMain.on('print-page', (e, id) => views.get(id)?.webContents.print());
+ipcMain.handle('zoom', (e, { id, action }) => {
+  const view = views.get(id);
+  if (!view) return 100;
+  let level = view.webContents.getZoomLevel();
+  if (action === 'in') level = Math.min(level + 0.5, 5);
+  else if (action === 'out') level = Math.max(level - 0.5, -5);
+  else level = 0;
+  view.webContents.setZoomLevel(level);
+  return Math.round(Math.pow(1.2, level) * 100);
+});
+
+ipcMain.handle('get-history', () => getHistory());
+ipcMain.handle('clear-history', () => { clearHistory(); return true; });
+ipcMain.handle('get-downloads', () => getDownloads());
+ipcMain.handle('clear-downloads', () => { clearDownloads(); return true; });
+ipcMain.handle('open-download-file', (e, filePath) => shell.openPath(filePath));
+ipcMain.handle('show-download-in-folder', (e, filePath) => shell.showItemInFolder(filePath));
 
 // ---------- IPC: الإضافات (Extensions) ----------
 ipcMain.handle('install-extension', async (e, extensionIdOrUrl) => {
