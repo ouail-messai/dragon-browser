@@ -29,12 +29,12 @@
     overflow: hidden;
   }
 
-  /* ---------- الشريط العلوي: أزرار التنقل + التبويبات + الحماية/القائمة ---------- */
-  #chrome-bar {
+  /* ---------- الصف 1: التبويبات فقط (نظيف كيما Chrome) ---------- */
+  #tabbar {
     -webkit-app-region: drag;
     display: flex;
     align-items: center;
-    height: 48px;
+    height: 40px;
     background: var(--navy);
     border-bottom: 1px solid var(--border);
     padding: 0 8px;
@@ -114,26 +114,29 @@
   }
   #new-tab-btn:hover { background: rgba(255,255,255,0.08); color: var(--text); }
 
+  /* ---------- الصف 2: التنقل + شريط العنوان + Extensions/Shield/القائمة (كيما Chrome بالضبط) ---------- */
+  #toolbar-row {
+    -webkit-app-region: drag;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 44px;
+    background: var(--void);
+    border-bottom: 1px solid var(--border);
+    padding: 0 8px;
+  }
+  #toolbar-row .nav-btn { -webkit-app-region: no-drag; }
+
   #chrome-right {
     -webkit-app-region: no-drag;
     display: flex;
     align-items: center;
     gap: 4px;
     flex-shrink: 0;
-    padding-left: 4px;
   }
   #shield-btn.active { color: #3ddc84; }
 
   /* ---------- شريط العنوان (Omnibox) ---------- */
-  #address-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    height: 40px;
-    background: var(--void);
-    border-bottom: 1px solid var(--border);
-    padding: 0 10px;
-  }
   #address-bar {
     flex: 1;
     height: 28px;
@@ -147,6 +150,7 @@
     outline: none;
     box-shadow: inset 0 1px 2px rgba(0,0,0,0.3);
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    -webkit-app-region: no-drag;
   }
   #address-bar:focus { border-color: var(--red); box-shadow: inset 0 1px 2px rgba(0,0,0,0.3), 0 0 0 3px var(--red-glow); }
   #address-bar::placeholder { color: var(--steel); }
@@ -197,17 +201,55 @@
   }
   .menu-zoom button:hover { border-color: var(--red); }
   .menu-zoom .zoom-level { font-family: var(--mono); font-size: 11px; color: var(--steel); width: 36px; text-align: center; }
+
+  /* ---------- نافذة Extensions المنسدلة الصغيرة (كيما Chrome بالضبط) ---------- */
+  #ext-popup {
+    display: none;
+    position: fixed;
+    top: 88px; right: 8px;
+    width: 300px;
+    background: var(--navy);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    z-index: 999;
+    -webkit-app-region: no-drag;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    overflow: hidden;
+  }
+  #ext-popup.open { display: block; }
+  #ext-popup .ep-header { padding: 12px 14px; font-family: var(--headline); font-size: 13px; font-weight: 700; border-bottom: 1px solid var(--border); }
+  #ext-popup .ep-list { max-height: 280px; overflow-y: auto; }
+  #ext-popup .ep-empty { padding: 24px 14px; text-align: center; color: var(--steel); font-size: 12px; }
+  #ext-popup .ep-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; }
+  #ext-popup .ep-item:hover { background: rgba(255,255,255,0.04); }
+  #ext-popup .ep-icon { width: 26px; height: 26px; border-radius: 5px; background: var(--void); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
+  #ext-popup .ep-icon img { width: 100%; height: 100%; object-fit: contain; }
+  #ext-popup .ep-icon .material-symbols-outlined { font-size: 14px; color: var(--steel); }
+  #ext-popup .ep-name { font-size: 12px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #ext-popup .ep-footer {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 14px; border-top: 1px solid var(--border);
+    font-size: 12px; color: var(--steel); cursor: pointer;
+  }
+  #ext-popup .ep-footer:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+  #ext-popup .ep-footer .material-symbols-outlined { font-size: 16px; }
 </style>
 </head>
 <body>
-  <div id="chrome-bar">
+  <div id="tabbar">
+    <div id="tabs-strip"></div>
+    <div id="new-tab-btn"><span class="material-symbols-outlined" style="font-size:18px;">add</span></div>
+  </div>
+
+  <div id="progress-bar"></div>
+
+  <div id="toolbar-row">
     <div class="nav-btn" id="back"><span class="material-symbols-outlined">arrow_back</span></div>
     <div class="nav-btn" id="forward"><span class="material-symbols-outlined">arrow_forward</span></div>
     <div class="nav-btn" id="reload"><span class="material-symbols-outlined">refresh</span></div>
     <div class="nav-btn" id="home"><span class="material-symbols-outlined">home</span></div>
 
-    <div id="tabs-strip"></div>
-    <div id="new-tab-btn"><span class="material-symbols-outlined" style="font-size:18px;">add</span></div>
+    <input id="address-bar" type="text" placeholder="Search or enter address" spellcheck="false" />
 
     <div id="chrome-right">
       <div class="nav-btn" id="extensions-btn" title="Extensions"><span class="material-symbols-outlined">extension</span></div>
@@ -216,10 +258,10 @@
     </div>
   </div>
 
-  <div id="progress-bar"></div>
-
-  <div id="address-row">
-    <input id="address-bar" type="text" placeholder="Search or enter address" spellcheck="false" />
+  <div id="ext-popup">
+    <div class="ep-header">Extensions</div>
+    <div class="ep-list" id="ep-list"></div>
+    <div class="ep-footer" id="ep-manage"><span class="material-symbols-outlined">settings</span> Manage extensions</div>
   </div>
 
   <div id="menu-panel">

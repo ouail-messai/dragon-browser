@@ -59,7 +59,7 @@ let lastActiveTime = new Map(); // tabId -> timestamp
 let activeTabId = null;
 let tabCounter = 0;
 
-const TOOLBAR_HEIGHT = 88; // 48px شريط الأزرار/التبويبات + 40px شريط العنوان (التصميم الجديد)
+const TOOLBAR_HEIGHT = 84; // 40px صف التبويبات + 44px صف الأزرار/العنوان (بنية Chrome الحقيقية: صفين منفصلين)
 const SUSPEND_AFTER_MS = 5 * 60 * 1000; // نوقف أي تبويب غير نشيط بعد 5 دقايق باش نحرر الرام
 const SUSPEND_CHECK_INTERVAL = 60 * 1000; // نفحص كل دقيقة
 

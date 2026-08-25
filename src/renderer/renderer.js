@@ -82,10 +82,33 @@ window.dragon.onLoadingStop(({ id }) => {
   }, 250);
 });
 
-// ---------- الإضافات (Extensions) — تفتح كصفحة كاملة بالتفصيل، ماشي نافذة صغيرة ----------
+// ---------- الإضافات (Extensions) — نافذة منسدلة صغيرة كيما Chrome بالضبط ----------
+const extPopup = document.getElementById('ext-popup');
+const epList = document.getElementById('ep-list');
+
+async function refreshExtPopup() {
+  const list = await window.dragon.listExtensions();
+  if (!list.length) {
+    epList.innerHTML = '<div class="ep-empty">ما فيه أي إضافة منصبة حاليا</div>';
+    return;
+  }
+  epList.innerHTML = list.map(ext => `
+    <div class="ep-item">
+      <div class="ep-icon">${ext.icon ? `<img src="${ext.icon}"/>` : '<span class="material-symbols-outlined">extension</span>'}</div>
+      <span class="ep-name">${ext.name}</span>
+    </div>
+  `).join('');
+}
+
 document.getElementById('extensions-btn').onclick = () => {
-  window.dragon.newTab();
-  setTimeout(() => window.dragon.navigate(activeId, 'dragon://extensions'), 60);
+  document.getElementById('menu-panel').classList.remove('open');
+  extPopup.classList.toggle('open');
+  if (extPopup.classList.contains('open')) refreshExtPopup();
+};
+
+document.getElementById('ep-manage').onclick = () => {
+  extPopup.classList.remove('open');
+  openInternal('dragon://extensions');
 };
 
 // ---------- قائمة "..." (كاملة كيما Chrome) ----------
@@ -98,7 +121,10 @@ function openInternal(url) {
   setTimeout(() => window.dragon.navigate(activeId, url), 60);
 }
 
-document.getElementById('menu-btn').onclick = () => menuPanel.classList.toggle('open');
+document.getElementById('menu-btn').onclick = () => {
+  extPopup.classList.remove('open');
+  menuPanel.classList.toggle('open');
+};
 
 document.getElementById('menu-new-tab').onclick = () => { window.dragon.newTab(); closeMenu(); };
 document.getElementById('menu-new-window').onclick = () => { window.dragon.newWindow(); closeMenu(); };
@@ -132,5 +158,8 @@ document.addEventListener('keydown', (e) => {
 document.addEventListener('click', (e) => {
   if (!menuPanel.contains(e.target) && e.target.id !== 'menu-btn' && !document.getElementById('menu-btn').contains(e.target)) {
     closeMenu();
+  }
+  if (!extPopup.contains(e.target) && e.target.id !== 'extensions-btn' && !document.getElementById('extensions-btn').contains(e.target)) {
+    extPopup.classList.remove('open');
   }
 });
